@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simba Teknik Mimari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7fd; --surface:#ffffff; --surface-2:#f0f4fc; --line:#dbe3f2;
+  --text:#18224d; --muted:#5b6690; --faint:#8a94b8;
+  --blue:#2b59e8; --blue-soft:#e3ebff;
+  --yellow:#f5b70a; --yellow-soft:#fff4d0;
+  --purple:#7b5cf0; --purple-soft:#eee8ff;
+  --green:#14a06b; --green-soft:#dcf6ea;
+  --orange:#e8742b; --orange-soft:#ffe9da;
+  --pink:#d6457a; --pink-soft:#ffe3ee;
+  --shadow:0 1px 2px rgba(24,34,77,.05),0 8px 24px rgba(24,34,77,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1426; --surface:#171e36; --surface-2:#1d2541; --line:#2b3558;
+    --text:#e8ecff; --muted:#a3add3; --faint:#7581ab;
+    --blue:#7d9cff; --blue-soft:#1f2c5c;
+    --yellow:#ffcc4d; --yellow-soft:#3a3218;
+    --purple:#a993ff; --purple-soft:#2c2452;
+    --green:#4fd39c; --green-soft:#143a2c;
+    --orange:#ff9d63; --orange-soft:#3d2618;
+    --pink:#ff7aa8; --pink-soft:#3f1c2b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1426; --surface:#171e36; --surface-2:#1d2541; --line:#2b3558;
+  --text:#e8ecff; --muted:#a3add3; --faint:#7581ab;
+  --blue:#7d9cff; --blue-soft:#1f2c5c;
+  --yellow:#ffcc4d; --yellow-soft:#3a3218;
+  --purple:#a993ff; --purple-soft:#2c2452;
+  --green:#4fd39c; --green-soft:#143a2c;
+  --orange:#ff9d63; --orange-soft:#3d2618;
+  --pink:#ff7aa8; --pink-soft:#3f1c2b;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Nunito,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 16px 80px}
+h1{font-size:clamp(28px,4vw,40px);font-weight:900;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:22px;font-weight:900;margin:56px 0 6px;letter-spacing:-.01em}
+.lead{color:var(--muted);font-size:17px;margin:0;max-width:760px}
+.sub{color:var(--muted);margin:0 0 20px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+a{color:var(--blue)}
+.top{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:28px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand svg{width:56px;height:56px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--yellow);color:#1b2350;font-weight:800;text-decoration:none;box-shadow:0 4px 0 #d39a00}
+.btn:hover{filter:brightness(1.04)}
+
+/* product cards */
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+.prod .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:10px}
+.prod h3{margin:0;font-size:17px;font-weight:900}
+.prod .who{color:var(--muted);font-size:13px;font-weight:700;margin-bottom:10px}
+.prod ul{margin:0;padding-left:18px;font-size:14px;color:var(--text)}
+.prod li{margin:2px 0}
+.plat{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tag{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+
+/* diagram */
+.diagram{display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:start}
+.layers{display:flex;flex-direction:column;gap:0}
+.layer{border-radius:18px;padding:14px;border:1.5px solid var(--line);background:var(--surface);position:relative}
+.layer-title{font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.layer-title span:last-child{font-weight:700;text-transform:none;letter-spacing:0;color:var(--muted)}
+.row{display:grid;gap:8px}
+.box{border-radius:12px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px}
+.box b{display:block;font-weight:900;font-size:14px}
+.box small{color:var(--muted);font-weight:700;font-size:12px}
+.l-client{border-color:color-mix(in srgb,var(--blue) 35%,var(--line));background:color-mix(in srgb,var(--blue-soft) 45%,var(--surface))}
+.l-client .layer-title{color:var(--blue)}
+.l-edge{border-style:dashed}
+.l-edge .layer-title{color:var(--muted)}
+.l-api{border-color:color-mix(in srgb,var(--purple) 40%,var(--line));background:color-mix(in srgb,var(--purple-soft) 40%,var(--surface))}
+.l-api .layer-title{color:var(--purple)}
+.l-data{border-color:color-mix(in srgb,var(--green) 40%,var(--line));background:color-mix(in srgb,var(--green-soft) 40%,var(--surface))}
+.l-data .layer-title{color:var(--green)}
+.mod{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mod code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px;font-weight:700;color:var(--purple)}
+.mod div{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.api-split{display:grid;grid-template-columns:1fr 170px;gap:10px}
+.worker{border:1.5px dashed color-mix(in srgb,var(--purple) 45%,var(--line));border-radius:12px;padding:10px;background:var(--surface);font-size:13px}
+.worker b{display:block;font-weight:900;margin-bottom:4px}
+.worker ul{margin:0;padding-left:16px;color:var(--muted)}
+.conn{display:flex;align-items:center;justify-content:center;gap:10px;height:40px;color:var(--faint);font-size:12px;font-weight:800}
+.conn::before{content:"";width:2px;height:100%;background:repeating-linear-gradient(to bottom,var(--faint) 0 4px,transparent 4px 8px)}
+.conn span{background:var(--bg);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.ext{position:sticky;top:16px;border-color:color-mix(in srgb,var(--orange) 40%,var(--line));background:color-mix(in srgb,var(--orange-soft) 40%,var(--surface))}
+.ext .layer-title{color:var(--orange)}
+.ext .box{background:var(--surface)}
+.ext .box + .box{margin-top:8px}
+
+/* flows */
+.flows{display:grid;gap:14px}
+.flow h3{margin:0 0 12px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;counter-reset:s}
+.step{flex:1 1 150px;min-width:140px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;position:relative;counter-increment:s}
+.step::before{content:counter(s);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:900;background:var(--c,var(--blue));color:#fff;margin-right:6px;vertical-align:1px}
+.step b{font-weight:900}
+.step small{display:block;color:var(--muted);font-size:12px;margin-top:3px;font-weight:700}
+
+/* stack table */
+.stack{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.stack th,.stack td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14.5px}
+.stack tr:last-child td{border-bottom:0}
+.stack th{background:var(--surface-2);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stack td:first-child{font-weight:900;white-space:nowrap}
+.chip{display:inline-block;margin:2px 4px 2px 0;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:800;background:var(--blue-soft);color:var(--blue)}
+.why{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+
+/* money */
+.money{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.money h3{margin:0 0 4px;font-size:16px;font-weight:900}
+.split{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:12px 0 6px;gap:2px}
+.split i{display:block;height:100%}
+.legend{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;color:var(--muted)}
+.money p{font-size:14px;margin:8px 0 0;color:var(--muted)}
+
+/* roadmap */
+.road{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;align-items:center}
+.road .name{font-weight:900;font-size:14px}
+.road .name small{display:block;color:var(--muted);font-weight:700;font-size:12px}
+.track{position:relative;height:44px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.bar{position:absolute;top:6px;bottom:6px;border-radius:8px;padding:0 10px;display:flex;align-items:center;font-size:12.5px;font-weight:800;color:var(--bar-text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .bar{--bar-text:#10162f}}
+:root[data-theme="dark"] .bar{--bar-text:#10162f}
+.months{display:grid;grid-template-columns:repeat(10,1fr);font-size:11px;font-weight:800;color:var(--faint);text-align:left}
+
+/* market */
+.market{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.market .card h3{margin:0 0 4px;font-size:16px;font-weight:900}
+.market .card p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.langs{display:grid;gap:8px}
+.lang{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.lang code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:800;font-size:13px;color:var(--blue);background:var(--blue-soft);border-radius:8px;padding:4px 0;text-align:center}
+.lang b{display:block;font-weight:900;font-size:14.5px}
+.lang small{color:var(--muted);font-weight:700;font-size:12.5px}
+.mx-wrap{overflow-x:auto}
+.mx{border-collapse:separate;border-spacing:4px;font-size:13px;width:100%}
+.mx th{font-size:12px;color:var(--muted);font-weight:800;text-align:center;padding:4px}
+.mx th:first-child{text-align:left}
+.mx td{text-align:center;border-radius:8px;padding:8px 4px;font-weight:800}
+.mx td.l1{background:var(--green-soft);color:var(--green)}
+.mx td.l2{background:var(--yellow-soft);color:var(--text)}
+.mx td.l3{background:var(--surface-2);color:var(--muted)}
+.mx td.na{background:transparent;color:var(--faint)}
+.mx-key{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;font-weight:800;color:var(--muted)}
+.mx-key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.pay{width:100%;border-collapse:collapse;font-size:13.5px}
+.pay td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}
+.pay td:first-child{font-weight:900;width:34%;padding-right:10px}
+.st{display:inline-block;font-size:11px;font-weight:900;padding:1px 7px;border-radius:8px;margin-top:3px}
+.st.ok{background:var(--green-soft);color:var(--green)}
+.st.chk{background:var(--orange-soft);color:var(--orange)}
+.rules{margin:0;padding-left:18px;font-size:14px}
+.rules li{margin:5px 0}
+.rules b{font-weight:900}
+
+footer{margin-top:56px;color:var(--faint);font-size:13px}
+
+@media (max-width:980px){
+  .products{grid-template-columns:repeat(2,1fr)}
+  .diagram{grid-template-columns:1fr}
+  .ext{position:static}
+  .money{grid-template-columns:1fr}
+  .market{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  .products{grid-template-columns:1fr}
+  .api-split{grid-template-columns:1fr}
+  .road{grid-template-columns:1fr}
+  .stack td:first-child{white-space:normal}
+  .stack th:nth-child(3),.stack td:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lion" viewBox="0 0 100 100">
+    <g fill="#b9541c"><circle cx="50" cy="14" r="13"/><circle cx="72" cy="20" r="13"/><circle cx="86" cy="38" r="13"/><circle cx="88" cy="60" r="13"/><circle cx="78" cy="80" r="13"/><circle cx="60" cy="90" r="13"/><circle cx="40" cy="90" r="13"/><circle cx="22" cy="80" r="13"/><circle cx="12" cy="60" r="13"/><circle cx="14" cy="38" r="13"/><circle cx="28" cy="20" r="13"/></g>
+    <circle cx="50" cy="52" r="38" fill="#d8691f"/>
+    <circle cx="27" cy="28" r="9" fill="#f3ad3d"/><circle cx="27" cy="28" r="4.5" fill="#e07b39"/>
+    <circle cx="73" cy="28" r="9" fill="#f3ad3d"/><circle cx="73" cy="28" r="4.5" fill="#e07b39"/>
+    <ellipse cx="50" cy="55" rx="29" ry="27" fill="#f7bb4f"/>
+    <ellipse cx="50" cy="68" rx="15" ry="11" fill="#fde6b8"/>
+    <circle cx="33" cy="64" r="5" fill="#f4907a" opacity=".45"/><circle cx="67" cy="64" r="5" fill="#f4907a" opacity=".45"/>
+    <ellipse cx="40" cy="50" rx="5.5" ry="6.5" fill="#2a1a10"/><ellipse cx="60" cy="50" rx="5.5" ry="6.5" fill="#2a1a10"/>
+    <circle cx="42" cy="47.5" r="2" fill="#fff"/><circle cx="62" cy="47.5" r="2" fill="#fff"/>
+    <path d="M44 61.5c0-2 12-2 12 0 0 2.5-4 5-6 5s-6-2.5-6-5z" fill="#5a2e1a"/>
+    <path d="M50 66v3M43 70c3 4 11 4 14 0" stroke="#5a2e1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <svg aria-hidden="true"><use href="#lion"/></svg>
+      <div>
+        <div class="eyebrow">Teknik altyapı · v0.1</div>
+        <h1>Simba platform mimarisi</h1>
+      </div>
+    </div>
+    <a class="btn" href="../demo/index.html">Öğrenci arayüzü demosu ▶</a>
+  </div>
+  <p class="lead">Dört uygulama, tek backend. Uçtan uca TypeScript: mobilde React Native (Expo), web’de Next.js, sunucuda NestJS modüler monolit. Video, ses ve ödeme gibi zor parçalar hazır servislerden alınıyor; ekip öğrenme deneyimine odaklanıyor. İlk pazar Türkmenistan, ardından BDT ülkeleri; arayüz Türkmence, Rusça ve Türkçe.</p>
+
+  <section class="products" aria-label="Uygulamalar">
+    <div class="card prod">
+      <div class="ico" style="background:var(--yellow-soft)">🦁</div>
+      <h3>Simba</h3>
+      <div class="who">Öğrenci uygulaması</div>
+      <ul><li>Ders yolu & egzersizler</li><li>Hatalarını tekrar (FSRS)</li><li>Lig, görev, seri, can</li><li>Öğretmenle canlı ders</li><li>Creator kursları, Premium</li></ul>
+      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span><span class="tag">tk · ru · tr</span></div>
+    </div>
+    <div class="card prod">
+      <div class="ico" style="background:var(--green-soft)">👩‍🏫</div>
+      <h3>Simba Teach</h3>
+      <div class="who">Öğretmen uygulaması</div>
+      <ul><li>Başvuru, profil, video tanıtım</li><li>Uygunluk takvimi</li><li>Rezervasyon & “Şimdi Görüş”</li><li>Görüntülü ders + ders notu</li><li>Kazanç & ödeme talebi</li></ul>
+      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span><span class="tag">tk · ru · tr</span></div>
+    </div>
+    <div class="card prod">
+      <div class="ico" style="background:var(--purple-soft)">🎬</div>
+      <h3>Simba Studio</h3>
+      <div class="who">İçerik üretici paneli</div>
+      <ul><li>Kurs / ünite / ders editörü</li><li>Egzersiz şablonları + AI asistan</li><li>Video & ses yükleme</li><li>İnceleme → yayın akışı</li><li>Satış ve gelir raporu</li></ul>
+      <div class="plat"><span class="tag">Web</span></div>
+    </div>
+    <div class="card prod">
+      <div class="ico" style="background:var(--pink-soft)">🛡️</div>
+      <h3>Simba Admin</h3>
+      <div class="who">Yönetim & destek</div>
+      <ul><li>Kullanıcı arama, ban, rol</li><li>Destek talepleri & canlı destek</li><li>Öğretmen ve içerik onayı</li><li>Ödeme, iade, payout</li><li>Audit log, raporlar</li></ul>
+      <div class="plat"><span class="tag">Web · ayrı domain</span><span class="tag">2FA</span></div>
+    </div>
+  </section>
+
+  <h2>Sistem diyagramı</h2>
+  <p class="sub">İstekler yukarıdan aşağı akar. Harici servisler sağda; backend ve worker’lar bunlarla konuşur.</p>
+  <div class="diagram">
+    <div class="layers">
+      <div class="layer l-client">
+        <div class="layer-title"><span>İstemciler</span><span>apps/* · monorepo</span></div>
+        <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+          <div class="box"><b>Simba Mobil</b><small>React Native · Expo</small></div>
+          <div class="box"><b>Simba Web</b><small>Next.js · SEO + uygulama</small></div>
+          <div class="box"><b>Simba Teach</b><small>Expo + Next.js</small></div>
+          <div class="box"><b>Simba Studio</b><small>Next.js</small></div>
+          <div class="box"><b>Simba Admin</b><small>Next.js · SSO/2FA</small></div>
+        </div>
+      </div>
+      <div class="conn"><span>HTTPS · REST/OpenAPI · WSS</span></div>
+      <div class="layer l-edge">
+        <div class="layer-title"><span>Edge</span><span>Cloudflare + AWS ALB</span></div>
+        <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+          <div class="box"><b>DNS · WAF · DDoS</b><small>Cloudflare</small></div>
+          <div class="box"><b>CDN</b><small>ses, görsel, video</small></div>
+          <div class="box"><b>Load balancer</b><small>rate-limit, TLS</small></div>
+        </div>
+      </div>
+      <div class="conn"><span>JWT · RBAC</span></div>
+      <div class="layer l-api">
+        <div class="layer-title"><span>Backend · NestJS modüler monolit</span><span>ECS Fargate</span></div>
+        <div class="api-split">
+          <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+            <div class="mod"><code>identity</code><div>giriş, OAuth, roller, 2FA</div></div>
+            <div class="mod"><code>users</code><div>profil, takip, KVKK</div></div>
+            <div class="mod"><code>catalog</code><div>kurs → ders → egzersiz</div></div>
+            <div class="mod"><code>learning</code><div>cevap, ilerleme, FSRS tekrar</div></div>
+            <div class="mod"><code>gamification</code><div>lig, görev, seri, elmas</div></div>
+            <div class="mod"><code>tutoring</code><div>takvim, rezervasyon, oda</div></div>
+            <div class="mod"><code>marketplace</code><div>creator kursları, erişim</div></div>
+            <div class="mod"><code>billing</code><div>abonelik, ledger, payout</div></div>
+            <div class="mod"><code>notifications</code><div>push, e-posta, in-app</div></div>
+            <div class="mod"><code>support</code><div>talepler, canlı destek</div></div>
+            <div class="mod"><code>moderation</code><div>şikayet, içerik onayı</div></div>
+            <div class="mod"><code>realtime</code><div>WS: sohbet, online durum</div></div>
+          </div>
+          <div class="worker">
+            <b>Worker’lar · BullMQ</b>
+            <ul><li>lig kapanışı</li><li>seri hatırlatma</li><li>medya işleme</li><li>payout hesaplama</li><li>webhook işleme</li><li>e-posta</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="conn"><span>Prisma / SQL · Redis</span></div>
+      <div class="layer l-data">
+        <div class="layer-title"><span>Veri</span><span>AWS eu-central-1</span></div>
+        <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+          <div class="box"><b>PostgreSQL</b><small>RDS · ana veri, ledger</small></div>
+          <div class="box"><b>Redis</b><small>cache, lig, kuyruk</small></div>
+          <div class="box"><b>S3</b><small>medya, kayıtlar</small></div>
+          <div class="box"><b>Meilisearch</b><small>öğretmen & kurs arama</small></div>
+          <div class="box"><b>PostHog</b><small>analitik, A/B, flag</small></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="layer ext" aria-label="Harici servisler">
+      <div class="layer-title"><span>Harici servisler</span></div>
+      <div class="box"><b>LiveKit</b><small>WebRTC görüntülü ders, kayıt</small></div>
+      <div class="box"><b>Azure AI Speech</b><small>TTS, STT, telaffuz puanı (en/zh/ru/fr)</small></div>
+      <div class="box"><b>LLM API</b><small>AI sohbet, hata açıklama, içerik asistanı</small></div>
+      <div class="box"><b>RevenueCat</b><small>App Store / Google Play abonelik</small></div>
+      <div class="box"><b>iyzico · Stripe · yerel ortaklar</b><small>web ödeme, payout; Türkmenistan’da kod satan bayiler</small></div>
+      <div class="box"><b>SMS sağlayıcısı</b><small>telefonla giriş (OTP), bildirim yedeği</small></div>
+      <div class="box"><b>Mux</b><small>creator video: yükleme, HLS</small></div>
+      <div class="box"><b>FCM / APNs · Resend</b><small>push ve e-posta</small></div>
+      <div class="box"><b>Sentry · Grafana</b><small>hata, metrik, trace</small></div>
+    </aside>
+  </div>
+
+  <h2>Kritik akışlar</h2>
+  <p class="sub">Platformun üç farklı tarafının birbirine nasıl bağlandığı.</p>
+  <div class="flows">
+    <div class="card flow">
+      <h3>🦁 Öğrenci ders tamamlar</h3>
+      <div class="steps" style="--c:var(--blue)">
+        <div class="step"><b>Ders paketi</b><small>catalog → CDN’den ses/görsel, offline önbellek</small></div>
+        <div class="step"><b>Cevaplar</b><small>exercise-engine istemcide anında değerlendirir</small></div>
+        <div class="step"><b>Senkron</b><small>learning: idempotent attempt event’leri</small></div>
+        <div class="step"><b>Tekrar</b><small>yanlışlar FSRS review_items’a</small></div>
+        <div class="step"><b>Ödül</b><small>gamification: elmas, lig puanı (Redis), görev</small></div>
+      </div>
+    </div>
+    <div class="card flow">
+      <h3>👩‍🏫 Öğretmenle canlı ders</h3>
+      <div class="steps" style="--c:var(--green)">
+        <div class="step"><b>Arama</b><small>Meilisearch: dil, fiyat, puan, müsaitlik</small></div>
+        <div class="step"><b>Rezervasyon</b><small>tutoring: slot kilidi, kredi bloke (billing)</small></div>
+        <div class="step"><b>Hatırlatma</b><small>worker: 24 sa / 10 dk önce push</small></div>
+        <div class="step"><b>Görüşme</b><small>LiveKit oda token’ı, sohbet, ders notu</small></div>
+        <div class="step"><b>Hak ediş</b><small>ledger: öğretmene bekleyen bakiye</small></div>
+      </div>
+    </div>
+    <div class="card flow">
+      <h3>🎬 Creator kurs yayınlar ve kazanır</h3>
+      <div class="steps" style="--c:var(--purple)">
+        <div class="step"><b>Üretim</b><small>Studio editörü, Mux’a video, AI ile egzersiz taslağı</small></div>
+        <div class="step"><b>İnceleme</b><small>moderation: içerik editörü onayı</small></div>
+        <div class="step"><b>Yayın</b><small>catalog: versiyon yayınlanır, aramaya düşer</small></div>
+        <div class="step"><b>Satış</b><small>tekil satış veya Premium havuzu</small></div>
+        <div class="step"><b>Payout</b><small>14 gün sonra kullanılabilir → aylık ödeme</small></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Hedef pazar: Türkmenistan ve BDT</h2>
+  <p class="sub">Pazarın dil, ödeme ve ağ koşulları mimariyi doğrudan etkiliyor. Turuncu işaretli maddeler lansmandan önce yerel ortakla doğrulanmalı.</p>
+  <div class="market">
+    <div class="card">
+      <h3>Arayüz dilleri</h3>
+      <p>Arayüz dili aynı zamanda öğrenmenin kaynak dili. Metinler koda gömülmez: ICU MessageFormat + Tolgee.</p>
+      <div class="langs">
+        <div class="lang"><code>tk</code><div><b>Türkmence · varsayılan</b><small>Latin: ä ç ž ň ö ş ü ý. Tarayıcı/mobil Intl verisi yok, gün-ay adları için kendi tablomuz</small></div></div>
+        <div class="lang"><code>ru</code><div><b>Rusça</b><small>BDT’nin ortak dili; 3 biçimli çoğul kuralları (1 урок, 2 урока, 5 уроков)</small></div></div>
+        <div class="lang"><code>tr</code><div><b>Türkçe</b><small>Türkiye pazarı ve ekibin dili</small></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Kurs matrisi</h3>
+      <p>Hedef dil içeriği bir kez üretilir; talimat, çeviri ve ipuçları <code>exercise_translations</code> içinde kaynak dil başına tutulur.</p>
+      <div class="mx-wrap">
+        <table class="mx">
+          <thead><tr><th>Kaynak → Hedef</th><th>EN</th><th>ZH</th><th>RU</th><th>FR</th></tr></thead>
+          <tbody>
+            <tr><th>Türkmence</th><td class="l1">Lansman</td><td class="l3">Sonra</td><td class="l2">Faz 4</td><td class="l3">Sonra</td></tr>
+            <tr><th>Rusça</th><td class="l1">Lansman</td><td class="l3">Sonra</td><td class="na">—</td><td class="l3">Sonra</td></tr>
+            <tr><th>Türkçe</th><td class="l2">Faz 4</td><td class="l3">Sonra</td><td class="l3">Sonra</td><td class="l3">Sonra</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mx-key"><span><i style="background:var(--green-soft)"></i>Faz 1 lansmanı</span><span><i style="background:var(--yellow-soft)"></i>İlk genişleme</span><span><i style="background:var(--surface-2)"></i>Talebe göre</span></div>
+    </div>
+    <div class="card">
+      <h3>Ödeme: ülkeye göre adaptör</h3>
+      <p><code>billing</code> içinde ülke → <code>PaymentProvider</code> eşlemesi ve ülke bazlı fiyat tablosu, Admin panelinden yönetilir.</p>
+      <table class="pay">
+        <tr><td>Türkmenistan</td><td><b>Aktivasyon kodu</b> (Premium, ders kredisi): yerel bayiler satar, kullanıcı uygulamada girer. Paralelde manat ile yerel ödeme ortağı.<br><span class="st chk">Yerel kartla uluslararası ödeme çok kısıtlı · doğrulanmalı</span></td></tr>
+        <tr><td>Kazakistan, Özbekistan</td><td>Kart + yerel cüzdanlar (ör. Kaspi; Payme, Click).<br><span class="st chk">Doğrulanmalı</span></td></tr>
+        <tr><td>Rusya</td><td>Yerel sağlayıcı (ör. YooKassa) yerel şirket ister; mağaza ödemeleri 2022’den beri kısıtlı.<br><span class="st chk">Hukuki değerlendirme · sonraki faz</span></td></tr>
+        <tr><td>Türkiye</td><td>iyzico + mağaza IAP.<br><span class="st ok">Hazır</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Ağ, erişim ve hukuk</h3>
+      <p>Türkmenistan’da internet yavaş ve pahalı; birçok yabancı servis engellenebiliyor.</p>
+      <ul class="rules">
+        <li><b>Tek alan adı:</b> API, CDN, analitik ve fontlar yalnızca kendi alan adlarımızdan.</li>
+        <li><b>Giriş:</b> telefon + SMS OTP birincil; +993 teslimatı test edilmeli.</li>
+        <li><b>Bildirim:</b> FCM/APNs engellenirse uygulama içi bildirim kutusu + SMS.</li>
+        <li><b>Dağıtım:</b> Google Play’e alternatif olarak PWA ve doğrudan APK.</li>
+        <li><b>Görüntülü ders:</b> LiveKit TURN/TLS 443 yedeği zorunlu; “sadece ses” modu.</li>
+        <li><b>Hafiflik:</b> offline ders paketleri, Opus ses, WebP/AVIF görseller.</li>
+        <li><b>Hukuk:</b> Türkmenistan veri mevzuatı doğrulanmalı; Rusya için veri Rusya’da tutulmalı (242-FZ).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Teknoloji seçimleri</h2>
+  <p class="sub">Her katman için tek öneri ve gerekçesi.</p>
+  <table class="stack">
+    <thead><tr><th>Katman</th><th>Seçim</th><th>Neden</th></tr></thead>
+    <tbody>
+      <tr><td>Mobil</td><td><span class="chip">React Native</span><span class="chip">Expo + EAS</span><span class="chip">NativeWind</span></td><td>Tek kod tabanı iOS/Android; OTA güncelleme; web ile TypeScript ve mantık paylaşımı.</td></tr>
+      <tr><td>Web</td><td><span class="chip">Next.js</span><span class="chip">Tailwind</span><span class="chip">shadcn/ui</span></td><td>SEO’lu pazarlama + uygulama tek yerde; admin/studio için hızlı form ve tablo bileşenleri.</td></tr>
+      <tr><td>Backend</td><td><span class="chip">NestJS</span><span class="chip">Prisma</span><span class="chip">BullMQ</span></td><td>Modül yapısı mikroservise geçişi kolaylaştırır; tipli ORM; Redis tabanlı iş kuyruğu.</td></tr>
+      <tr><td>Veri</td><td><span class="chip">PostgreSQL</span><span class="chip">Redis</span><span class="chip">S3</span><span class="chip">Meilisearch</span></td><td>İlişkisel çekirdek + jsonb egzersiz verisi; sorted set ile canlı lig sıralaması.</td></tr>
+      <tr><td>Canlı ders</td><td><span class="chip">LiveKit</span></td><td>Açık kaynak WebRTC SFU, RN/web SDK’ları, kayıt; Cloud’dan self-host’a geçilebilir.</td></tr>
+      <tr><td>Ses & AI</td><td><span class="chip">Azure AI Speech</span><span class="chip">LLM API</span></td><td>Dört dilde TTS + telaffuz puanı; AI sohbet partneri ve içerik asistanı.</td></tr>
+      <tr><td>Ödeme</td><td><span class="chip">RevenueCat</span><span class="chip">iyzico</span><span class="chip">Stripe</span><span class="chip">Aktivasyon kodu</span></td><td>Ülkeye göre takılabilen sağlayıcılar; mağazalar tek API’de; Türkmenistan’da yerel bayilerin sattığı kodlar.</td></tr>
+      <tr><td>Yerelleştirme</td><td><span class="chip">FormatJS (ICU)</span><span class="chip">Tolgee</span></td><td>Türkmence, Rusça, Türkçe; Rusça çoğul kuralları; çevirmenler için bağlamlı arayüz.</td></tr>
+      <tr><td>Altyapı</td><td><span class="chip">AWS</span><span class="chip">Vercel</span><span class="chip">Terraform</span><span class="chip">GitHub Actions</span></td><td>Frankfurt bölgesi; K8s yerine Fargate ile düşük operasyon yükü.</td></tr>
+      <tr><td>Gözlem</td><td><span class="chip">Sentry</span><span class="chip">OpenTelemetry</span><span class="chip">PostHog</span></td><td>Hata takibi, uçtan uca trace, ürün analitiği ve feature flag.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Gelir modelleri</h2>
+  <p class="sub">Örnek oranlar; kazançlar çift kayıtlı ledger’da tutulur.</p>
+  <div class="money">
+    <div class="card">
+      <h3>👑 Simba Premium</h3>
+      <div class="split"><i style="flex:80;background:var(--blue)"></i><i style="flex:20;background:var(--purple)"></i></div>
+      <div class="legend"><span>Platform %80</span><span>Creator havuzu %20</span></div>
+      <p>Mobilde IAP (RevenueCat), web’de iyzico/Stripe. Havuz, Premium kullanıcıların tamamladığı creator ders süresine göre dağıtılır.</p>
+    </div>
+    <div class="card">
+      <h3>👩‍🏫 Öğretmen dersleri</h3>
+      <div class="split"><i style="flex:75;background:var(--green)"></i><i style="flex:25;background:var(--blue)"></i></div>
+      <div class="legend"><span>Öğretmen %75</span><span>Platform %25</span></div>
+      <p>Kredi paketleri. Birebir canlı ders App Store 3.1.3(d) kapsamında uygulama dışı ödenebilir; lansman öncesi hukuki kontrol.</p>
+    </div>
+    <div class="card">
+      <h3>🎬 Creator kursları</h3>
+      <div class="split"><i style="flex:70;background:var(--purple)"></i><i style="flex:30;background:var(--blue)"></i></div>
+      <div class="legend"><span>Creator %70</span><span>Platform %30</span></div>
+      <p>Tekil satış. 14 günlük iade süresinden sonra bakiye kullanılabilir olur, aylık payout.</p>
+    </div>
+  </div>
+
+  <h2>Yol haritası</h2>
+  <p class="sub">Tahmini; egzersiz motoru ilk günden dört dili destekler, içerik paralel üretilir.</p>
+  <div class="road">
+    <div></div>
+    <div class="months"><span>Ay 1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+    <div class="name">Faz 0 · Temel<small>2–3 hafta</small></div>
+    <div class="track"><div class="bar" style="left:0;width:8%;background:var(--faint)">Temel</div></div>
+    <div class="name">Faz 1 · MVP<small>Türkmenistan lansmanı</small></div>
+    <div class="track"><div class="bar" style="left:7%;width:33%;background:var(--blue)">tk/ru/tr arayüz · tk→en, ru→en A1 · aktivasyon kodu</div></div>
+    <div class="name">Faz 2 · Öğretmen<small>Simba Teach</small></div>
+    <div class="track"><div class="bar" style="left:38%;width:22%;background:var(--green)">Takvim · LiveKit · payout</div></div>
+    <div class="name">Faz 3 · Creator<small>Simba Studio açılır</small></div>
+    <div class="track"><div class="bar" style="left:58%;width:22%;background:var(--purple)">Pazar yeri · gelir paylaşımı</div></div>
+    <div class="name">İçerik & pazar<small>tk→ru, ZH, FR · BDT</small></div>
+    <div class="track"><div class="bar" style="left:12%;width:88%;background:var(--orange)">tk→ru, Çince, Fransızca içerik (paralel) · Özbekistan/Kazakistan ödeme ve dilleri</div></div>
+    <div class="name">AI<small>sohbet, telaffuz</small></div>
+    <div class="track"><div class="bar" style="left:70%;width:30%;background:var(--pink)">AI sohbet partneri · telaffuz puanı</div></div>
+  </div>
+
+  <footer>Detaylı metin: <a href="ARCHITECTURE.md">docs/ARCHITECTURE.md</a> · Simba · Kasım 2026</footer>
+</div>
+</body>
+</html>
