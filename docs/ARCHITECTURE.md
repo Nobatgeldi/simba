@@ -280,6 +280,8 @@ simba/
 
 ## 11. Yol haritası
 
+> Sprint dökümü, ortamlar, devreye alma halkaları ve lansman kontrol listesi: [`docs/DELIVERY_PLAN.md`](DELIVERY_PLAN.md)
+
 | Faz | Süre (tahmini) | Kapsam |
 |---|---|---|
 | **0 — Temel** | 2–3 hafta | Tasarım sistemi, monorepo, CI/CD, kimlik doğrulama (telefon + SMS), i18n altyapısı (tk/ru/tr), ortamlar; Türkmenistan’dan ağ ve ödeme ön araştırması |
