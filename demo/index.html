@@ -1,0 +1,1241 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simba Arayüz Demosu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1b2a6b; --text:#25315f; --muted:#6a76a3; --faint:#9aa4c7;
+  --blue:#2b59e8; --blue-2:#4b7bff; --blue-soft:#e6eeff;
+  --yellow:#ffc928; --yellow-d:#e2a800; --gold:#ffb800;
+  --green:#1fb873; --green-soft:#d9f7e9; --green-d:#159a5e;
+  --red:#ee4a5d; --red-soft:#ffe3e7; --red-d:#c9364a;
+  --purple:#7b5cf0; --lav:#ece6ff; --mint:#d8f6ea;
+  --card:#ffffff; --line:#e3e9f7; --line-d:#cfd8ee;
+  --shadow:0 2px 0 rgba(43,89,232,.05),0 10px 26px rgba(43,89,232,.09);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:Nunito,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:#e9effb;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:disabled{cursor:default}
+
+/* ---------- page chrome ---------- */
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:1280px;margin:0 auto;padding:14px 16px}
+.page-head h1{font-size:18px;margin:0;font-weight:900;color:var(--navy)}
+.page-head p{margin:0;color:var(--muted);font-size:13px;font-weight:700}
+.head-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{padding:7px 14px;border-radius:999px;font-weight:800;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--blue);color:#fff}
+.head-link{font-weight:800;font-size:13px;color:var(--blue);text-decoration:none}
+.stage{display:flex;justify-content:center;padding:0 16px 24px}
+.device{position:relative;overflow:hidden;background:#f3f7ff}
+.stage[data-mode="mobile"] .device{width:390px;height:min(844px,calc(100vh - 92px));min-height:640px;border-radius:46px;border:10px solid #121833;box-shadow:0 30px 60px rgba(27,42,107,.25)}
+.stage[data-mode="web"] .device{width:100%;max-width:1280px;height:calc(100vh - 92px);min-height:640px;border-radius:18px;border:1px solid var(--line-d);box-shadow:0 20px 50px rgba(27,42,107,.15)}
+@media (max-width:600px){
+  .page-head{display:none}
+  .stage{padding:0}
+  .stage[data-mode] .device{width:100%;height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none}
+}
+
+/* ---------- app ---------- */
+.app{position:absolute;inset:0;container-type:inline-size;container-name:app;background:linear-gradient(180deg,#d6e6ff 0%,#eaf2ff 26%,#f4f7ff 60%)}
+.shell{height:100%;display:grid;grid-template-columns:1fr}
+.side,.rail{display:none}
+.center{display:flex;flex-direction:column;min-height:0;min-width:0}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 28px;scrollbar-width:thin}
+.main-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+.flg{display:inline-block;vertical-align:-2px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(27,42,107,.12);flex:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:14px 14px 10px}
+.logo{display:flex;align-items:center;gap:6px;font-weight:900;font-size:23px;color:var(--navy);letter-spacing:-.02em}
+.logo svg:not(.flg){width:42px;height:42px;flex:none}
+.logo-btn{position:relative;flex:none;display:grid}
+.logo-btn .flg{position:absolute;right:-3px;bottom:-1px;box-shadow:0 0 0 2px #fff}
+.page-title{display:none;font-size:24px;font-weight:900;color:var(--navy)}
+.tb-r{display:flex;align-items:center;gap:6px}
+.pill{display:flex;align-items:center;gap:0;background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.9);border-radius:999px;padding:3px;box-shadow:0 4px 14px rgba(43,89,232,.1)}
+.pill .it{display:flex;align-items:center;gap:3px;padding:5px 6px;border-radius:999px;font-weight:900;font-size:13.5px;color:var(--navy);white-space:nowrap}
+.pill .it.flag{display:none;padding:5px 8px;background:var(--blue-soft)}
+.pill button.it:hover{background:var(--blue-soft)}
+.bell{position:relative;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.85);display:grid;place-items:center;box-shadow:0 4px 14px rgba(43,89,232,.1);flex:none}
+.bell svg{width:22px;height:22px;fill:var(--blue)}
+.dot{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid #fff}
+
+.tabbar{display:flex;justify-content:space-around;background:#fff;border-radius:26px 26px 0 0;box-shadow:0 -6px 24px rgba(43,89,232,.08);padding:8px 6px calc(10px + env(safe-area-inset-bottom))}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:800;color:#7c88b5;padding:4px 0;position:relative}
+.tab svg{width:26px;height:26px;fill:#8794c4}
+.tab.on{color:var(--blue)}
+.tab.on svg{fill:var(--blue)}
+.tab.on::after{content:"";position:absolute;bottom:-6px;width:28px;height:4px;border-radius:4px;background:var(--blue)}
+
+.side{flex-direction:column;gap:6px;padding:20px 14px;border-right:1px solid var(--line);background:rgba(255,255,255,.6)}
+.side .logo{padding:0 8px 18px}
+.navi{display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:14px;font-weight:800;font-size:15px;color:#5f6c9e;border:2px solid transparent;text-align:left}
+.navi svg{width:24px;height:24px;fill:#8794c4}
+.navi:hover{background:#fff}
+.navi.on{background:var(--blue-soft);border-color:#c9d8ff;color:var(--blue)}
+.navi.on svg{fill:var(--blue)}
+.side .spacer{flex:1}
+.side .prem{flex-direction:column;align-items:flex-start;gap:6px}
+.side .prem .go{margin-left:0}
+.rail{flex-direction:column;gap:16px;padding:16px 18px 28px 0;overflow-y:auto}
+
+@container app (min-width:760px){
+  .shell{grid-template-columns:230px 1fr}
+  .side{display:flex}
+  .tabbar{display:none}
+  .topbar .logo{display:none}
+  .page-title{display:block}
+  .main .hero .marks{display:flex}
+  .pill .it.flag{display:flex}
+  .pill .it{padding:5px 9px;font-size:14.5px}
+
+  .topbar{padding:20px 24px 10px}
+  .main{padding:6px 24px 32px}
+  .sheet-wrap{align-items:center}
+  .sheet{border-radius:26px;max-width:460px;margin:0 16px}
+}
+@container app (min-width:1100px){
+  .shell{grid-template-columns:240px 1fr 330px}
+  .rail{display:flex}
+  .mobile-only{display:none !important}
+}
+
+/* ---------- common ---------- */
+.card{background:var(--card);border-radius:22px;box-shadow:var(--shadow)}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.sec-h h3{margin:0;font-size:18px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:8px}
+.sec-h .sub{font-size:13px;color:var(--muted);font-weight:700}
+.link{font-size:13px;font-weight:800;color:var(--navy);background:#fff;padding:7px 12px;border-radius:999px;box-shadow:0 2px 10px rgba(43,89,232,.1);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:900;border-radius:999px;padding:13px 24px;font-size:16px;transition:transform .08s}
+.btn:active{transform:translateY(2px)}
+.btn-y{background:var(--yellow);color:var(--navy);box-shadow:0 4px 0 var(--yellow-d)}
+.btn-y:active{box-shadow:0 2px 0 var(--yellow-d)}
+.btn-b{background:var(--blue);color:#fff;box-shadow:0 4px 0 #1d43b8}
+.btn-g{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-d)}
+.btn-r{background:var(--red);color:#fff;box-shadow:0 4px 0 var(--red-d)}
+.btn-w{background:#fff;color:var(--navy);box-shadow:0 3px 0 var(--line-d);border:1px solid var(--line)}
+.btn-block{width:100%}
+.btn:disabled{background:#e4e9f4;color:#a3adc9;box-shadow:0 4px 0 #cfd6e6}
+.bar{height:10px;background:#e7ecf7;border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ffcd3c,#ffae00);border-radius:999px;transition:width .4s}
+.bar.blue i{background:linear-gradient(90deg,#5b8bff,#2b59e8)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;padding:3px 9px;border-radius:999px;background:var(--blue-soft);color:var(--blue)}
+.badge.gold{background:#fff1c7;color:#a86c00}
+.badge.green{background:var(--green-soft);color:var(--green-d)}
+.badge.purple{background:var(--lav);color:var(--purple)}
+
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:26px 22px;min-height:196px;background:linear-gradient(160deg,#d3e4ff 0%,#a8c6ff 55%,#8fb3ff 100%);box-shadow:var(--shadow)}
+.hero h2{margin:0;font-size:28px;line-height:1.1;font-weight:900;color:var(--navy);max-width:58%}
+.hero p{margin:8px 0 18px;font-weight:700;color:#33427d;max-width:52%;font-size:15.5px}
+.hero .lion{position:absolute;right:-4px;bottom:-6px;width:170px;height:198px}
+.hero .marks{position:absolute;right:190px;bottom:12px;font-size:40px;display:none;gap:8px;opacity:.9}
+.hero .spark{position:absolute;right:150px;top:56px;font-size:20px}
+
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.qc{display:flex;align-items:center;gap:8px;padding:14px 12px;border-radius:22px;text-align:left;box-shadow:var(--shadow);position:relative}
+.qc .em{font-size:28px;line-height:1}
+.qc b{display:block;font-size:15.5px;font-weight:900;color:var(--navy)}
+.qc small{display:block;font-size:12.5px;font-weight:700;color:#55639a;line-height:1.3}
+.qc .chev{margin-left:auto;font-weight:900;color:var(--navy)}
+.qc.lav{background:linear-gradient(135deg,#efe9ff,#e2d8ff)}
+.qc.mint{background:linear-gradient(135deg,#ddf8ee,#c8f1e0)}
+.qc .cnt{position:absolute;top:8px;right:10px;background:var(--red);color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:1px 7px}
+
+/* path */
+.unit{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start}
+.unit-l{display:flex;flex-direction:column;gap:14px;position:sticky;top:0}
+.lvl{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:20px;background:#fff;box-shadow:var(--shadow);text-align:left}
+.lvl .em{font-size:28px}
+.lvl b{display:block;font-size:16px;font-weight:900;color:var(--navy)}
+.lvl small{font-size:13px;font-weight:700;color:var(--muted)}
+.readcard{border-radius:22px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.readcard .pic{background:linear-gradient(180deg,#dbe9ff,#c9efc4);height:132px;display:grid;place-items:end center}
+.readcard .pic svg{width:120px;height:130px;margin-bottom:-6px}
+.readcard .st{padding:10px 14px 14px}
+.readcard .st b{font-size:15px;font-weight:900;color:var(--navy)}
+.readcard .st .bar{margin-top:6px}
+.path{display:flex;flex-direction:column;align-items:center;gap:22px;padding:10px 0 20px;position:relative}
+.node-w{position:relative;display:flex;flex-direction:column;align-items:center}
+.node{width:86px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:32px;position:relative;transition:transform .1s}
+.node:active{transform:translateY(4px)}
+.node.cur{background:radial-gradient(circle at 50% 35%,#ffe27a,#ffbf1a 70%);box-shadow:0 8px 0 #d99a00,0 0 0 8px rgba(255,201,40,.25),0 14px 30px rgba(255,170,0,.35);animation:pulse 2s infinite}
+.node.done{background:radial-gradient(circle at 50% 35%,#ffe27a,#ffbf1a 70%);box-shadow:0 8px 0 #d99a00}
+.node.lock{background:radial-gradient(circle at 50% 35%,#f1f4fa,#d6dceb 75%);box-shadow:0 8px 0 #b3bcd2;filter:grayscale(1);opacity:.85}
+.node .mini{position:absolute;bottom:-4px;right:2px;font-size:16px;background:#fff;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.12);filter:none}
+.node-lbl{font-size:12px;font-weight:800;color:var(--muted);margin-top:12px}
+.node-w.has-tip{margin-top:34px}
+.tip{position:absolute;left:50%;top:-40px;translate:-50% 0;background:#fff1c7;color:#6b4a00;font-weight:900;font-size:13px;padding:8px 12px;border-radius:14px;transform:rotate(-4deg);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+@keyframes pulse{0%,100%{box-shadow:0 8px 0 #d99a00,0 0 0 8px rgba(255,201,40,.25),0 14px 30px rgba(255,170,0,.35)}50%{box-shadow:0 8px 0 #d99a00,0 0 0 14px rgba(255,201,40,.12),0 14px 30px rgba(255,170,0,.35)}}
+
+/* quests */
+.quests{padding:16px}
+.qrow{display:flex;gap:6px;align-items:flex-start}
+.q{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;font-size:13px;font-weight:800;color:var(--navy)}
+.q .ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#eef2fb;position:relative}
+.q.ok .ic{background:var(--green-soft)}
+.q.ok .ic::after{content:"✓";position:absolute;right:-4px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;display:grid;place-items:center;border:2px solid #fff}
+.q .n{font-size:12px;background:#eef2fb;color:var(--muted);padding:1px 8px;border-radius:999px}
+.timer{font-size:12.5px;font-weight:900;color:#b0620a;background:#fff1d6;padding:5px 10px;border-radius:999px;white-space:nowrap}
+
+.prem{display:flex;align-items:center;gap:12px;padding:16px;border-radius:22px;background:linear-gradient(110deg,#6d4ff0,#9b7dff);color:#fff;box-shadow:0 10px 26px rgba(109,79,240,.3);text-align:left;width:100%}
+.prem .em{font-size:38px}
+.prem b{display:block;font-size:17px;font-weight:900}
+.prem small{font-size:12.5px;font-weight:700;opacity:.9}
+.prem .go{margin-left:auto;background:#fff;color:var(--navy);font-weight:900;font-size:13px;padding:9px 13px;border-radius:999px;white-space:nowrap}
+.prem.on{background:linear-gradient(110deg,#f5b100,#ffd34d);color:var(--navy);box-shadow:0 10px 26px rgba(245,177,0,.3)}
+
+.tpromo{display:flex;align-items:center;gap:12px;padding:14px 16px;text-align:left;width:100%}
+.avs{display:flex}
+.avs .av{margin-left:-10px;border:3px solid #fff}
+.avs .av:first-child{margin-left:0}
+.tpromo b{display:block;font-weight:900;color:var(--navy);font-size:15.5px}
+.tpromo small{color:var(--muted);font-weight:700;font-size:12.5px}
+.live{display:inline-flex;align-items:center;gap:5px;color:var(--green-d);font-weight:900}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(31,184,115,.2)}
+
+/* leaderboard */
+.league{padding:18px;background:linear-gradient(160deg,#fff7dc,#ffffff 60%)}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:8px;margin:14px 0 6px}
+.pd{display:flex;flex-direction:column;align-items:center;text-align:center}
+.pd .ava{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:36px;background:#e8ecff;border:4px solid #c9d4ff;position:relative}
+.pd.p1 .ava{width:80px;height:80px;font-size:46px;background:#fff1c7;border-color:#ffc928}
+.pd.p1 .ava::before{content:"👑";position:absolute;top:-24px;font-size:24px}
+.pd .base{width:100%;margin-top:-10px;padding:16px 4px 10px;border-radius:14px 14px 6px 6px;background:linear-gradient(180deg,#eef1ff,#dfe5fb);font-weight:900;color:var(--navy)}
+.pd.p1 .base{background:linear-gradient(180deg,#ffe58a,#ffd04a);padding-top:26px}
+.pd.p3 .base{background:linear-gradient(180deg,#ffe2c4,#ffcfa1)}
+.pd .rk{font-size:22px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.pd .nm{font-size:14px}
+.pd .gm{font-size:13px;color:#4b588d}
+.lb{padding:6px}
+.lr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;font-weight:800}
+.lr + .lr{border-top:1px solid #f0f3fa}
+.lr .r{width:26px;text-align:center;color:var(--muted);font-weight:900}
+.lr .a{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#eef2fb}
+.lr .n{flex:1;min-width:0;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .g{color:var(--navy);font-weight:900;white-space:nowrap}
+.lr.me{background:#fff4cf;border-top-color:transparent}
+.lr.me + .lr{border-top-color:transparent}
+.zone{font-size:12px;font-weight:900;color:var(--green-d);padding:6px 12px;text-align:center}
+
+/* courses */
+.chead{display:flex;align-items:center;gap:12px;padding:16px}
+.chead .fl{font-size:40px}
+.chead b{font-size:19px;font-weight:900;color:var(--navy);display:block}
+.chead small{font-weight:700;color:var(--muted)}
+.units{padding:6px}
+.ur{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;text-align:left;width:100%}
+.ur + .ur{border-top:1px solid #f0f3fa}
+.ur .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:#fff1c7;flex:none}
+.ur.lk .ic{background:#eef1f7;filter:grayscale(1)}
+.ur .tx{flex:1;min-width:0}
+.ur b{display:block;font-weight:900;color:var(--navy)}
+.ur small{color:var(--muted);font-weight:700;font-size:12.5px}
+.ur .bar{margin-top:6px;height:7px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.cc{overflow:hidden;text-align:left;display:flex;flex-direction:column}
+.cc .cv{height:96px;display:grid;place-items:center;font-size:44px}
+.cc .ci{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.cc b{font-weight:900;color:var(--navy);line-height:1.25}
+.cc small{color:var(--muted);font-weight:700;font-size:12.5px}
+.cc .ft{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px}
+.price{font-weight:900;color:var(--navy)}
+
+/* teachers */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chipb{padding:8px 14px;border-radius:999px;background:#fff;font-weight:800;font-size:13.5px;color:var(--muted);white-space:nowrap;box-shadow:0 2px 8px rgba(43,89,232,.08);border:2px solid transparent}
+.chipb.on{border-color:var(--blue);color:var(--blue);background:var(--blue-soft)}
+.tc{padding:16px;display:flex;flex-direction:column;gap:12px}
+.tc-top{display:flex;gap:12px;align-items:center}
+.av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:19px;color:#fff;flex:none;position:relative}
+.av.sm{width:38px;height:38px;font-size:14px}
+.av .on{position:absolute;right:1px;bottom:1px;width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid #fff}
+.tc-top b{font-size:16.5px;font-weight:900;color:var(--navy)}
+.tc-top small{display:block;color:var(--muted);font-weight:700;font-size:13px}
+.tc .tags{display:flex;gap:6px;flex-wrap:wrap}
+.tc .acts{display:flex;gap:8px;align-items:center}
+.tc .acts .price{margin-right:auto;font-size:15px}
+.tc .acts .price small{font-weight:700;color:var(--muted);font-size:12px}
+.tc .btn{padding:10px 16px;font-size:14px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.upc{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.upc b{display:block;font-weight:900;color:var(--navy)}
+.upc small{color:var(--muted);font-weight:700}
+
+/* profile */
+.ph{display:flex;gap:16px;align-items:center;padding:6px 2px}
+.ph .big{width:118px;height:118px;border-radius:50%;background:radial-gradient(circle,#eaf2ff,#bcd3ff);border:5px solid #fff;box-shadow:0 0 0 4px #9fbfff,var(--shadow);display:grid;place-items:center;position:relative;flex:none}
+.ph .big svg{width:98px;height:98px}
+.ph .big::before{content:"👑";position:absolute;top:-22px;font-size:28px}
+.ph h2{margin:0;font-size:22px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:6px}
+.ph .vf{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px}
+.ph .ctry{display:inline-flex;gap:6px;align-items:center;margin:6px 0;padding:5px 12px;background:#fff;border-radius:999px;font-weight:800;font-size:13.5px;box-shadow:0 2px 8px rgba(43,89,232,.1)}
+.ph q{display:block;font-style:italic;font-weight:700;color:#41508a;font-size:14px}
+.fstats{display:grid;grid-template-columns:repeat(3,1fr);padding:14px 6px}
+.fstats div{text-align:center;font-weight:700;color:var(--muted);font-size:13px}
+.fstats div + div{border-left:1px solid var(--line)}
+.fstats b{display:block;font-size:20px;font-weight:900;color:var(--navy)}
+.ach{padding:16px;background:linear-gradient(160deg,#fff5d6,#fff 75%)}
+.medals{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.medal .m{width:64px;height:64px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;font-size:28px;border:4px solid #ffd76a;box-shadow:0 4px 0 #e2a800}
+.medal b{display:block;font-size:14px;font-weight:900;color:var(--navy)}
+.medal small{font-size:12px;font-weight:700;color:var(--muted)}
+.menu{padding:4px}
+.mi{display:flex;align-items:center;gap:14px;padding:13px 14px;width:100%;text-align:left;border-radius:16px}
+.mi + .mi{border-top:1px solid #f0f3fa}
+.mi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:#eef2fb;flex:none}
+.mi b{display:block;font-weight:900;color:var(--navy);font-size:15px}
+.mi small{color:var(--muted);font-weight:700;font-size:12.5px}
+.mi .chev{margin-left:auto;font-weight:900;color:var(--navy)}
+.mi:hover{background:#f6f8fe}
+
+/* ---------- overlays ---------- */
+.ov{position:absolute;inset:0;z-index:20;display:none}
+.ov.show{display:flex}
+.lesson{flex-direction:column;background:#fff}
+.l-head{display:flex;align-items:center;gap:14px;padding:18px 18px 8px;max-width:760px;width:100%;margin:0 auto}
+.l-head .x{font-size:22px;color:var(--faint);font-weight:900;width:32px}
+.l-head .bar{flex:1;height:16px}
+.l-head .bar i{background:linear-gradient(90deg,#4fd38f,#1fb873)}
+.l-head .hearts{font-weight:900;color:var(--red);font-size:16px;white-space:nowrap}
+.l-body{flex:1;overflow-y:auto;padding:16px 18px;max-width:760px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.l-body h2{margin:6px 0 0;font-size:23px;font-weight:900;color:var(--navy)}
+.l-tag{font-size:12px;font-weight:900;color:var(--purple);text-transform:uppercase;letter-spacing:.06em}
+.say{display:flex;align-items:flex-end;gap:10px}
+.say svg{width:86px;height:86px;flex:none}
+.bubble{position:relative;border:2px solid var(--line);border-radius:18px;padding:12px 16px;font-weight:800;font-size:17px;color:var(--navy);background:#fff;margin-bottom:24px}
+.bubble::before{content:"";position:absolute;left:-9px;bottom:14px;width:14px;height:14px;background:#fff;border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.word{display:flex;align-items:center;gap:12px;font-size:30px;font-weight:900;color:var(--navy)}
+.word small{display:block;font-size:15px;color:var(--muted);font-weight:700}
+.spk{width:52px;height:52px;border-radius:16px;background:var(--blue);color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:0 4px 0 #1d43b8;flex:none}
+.spk:active{transform:translateY(2px);box-shadow:0 2px 0 #1d43b8}
+.listen{display:flex;gap:14px;justify-content:center;padding:10px 0}
+.listen .spk{width:110px;height:110px;border-radius:28px;font-size:48px}
+.listen .spk.slow{width:70px;height:70px;font-size:28px;align-self:flex-end;background:#6f8dff;box-shadow:0 4px 0 #3e60d6}
+.opts{display:grid;grid-template-columns:1fr;gap:10px}
+@container app (min-width:560px){.opts{grid-template-columns:1fr 1fr}}
+.opt{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:2px solid var(--line);border-bottom-width:4px;background:#fff;text-align:left;font-weight:800;font-size:17px;color:var(--navy)}
+.opt .k{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;font-size:13px;color:var(--faint);flex:none}
+.opt small{display:block;font-size:13px;color:var(--muted);font-weight:700}
+.opt:hover:not(:disabled){background:#f7f9ff}
+.opt.sel{border-color:#7ea0ff;background:#eaf0ff}
+.opt.sel .k{border-color:#7ea0ff;color:var(--blue)}
+.opt.right{border-color:#5fd39c;background:var(--green-soft)}
+.opt.wrong{border-color:#ff97a3;background:var(--red-soft)}
+.aline{min-height:68px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;padding:4px 0 10px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding-top:6px}
+.wchip{padding:9px 14px;border-radius:14px;border:2px solid var(--line);border-bottom-width:4px;background:#fff;font-weight:800;font-size:17px;color:var(--navy);line-height:1.15;text-align:center}
+.wchip small{display:block;font-size:11px;color:var(--muted)}
+.wchip.used{background:#eef1f7;color:transparent;border-color:#eef1f7}
+.wchip.used small{color:transparent}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match .col{display:flex;flex-direction:column;gap:10px}
+.mb{padding:14px 10px;border-radius:16px;border:2px solid var(--line);border-bottom-width:4px;background:#fff;font-weight:800;font-size:16.5px;color:var(--navy);text-align:center}
+.mb.sel{border-color:#7ea0ff;background:#eaf0ff}
+.mb.done{opacity:.35;border-color:#5fd39c;background:var(--green-soft)}
+.mb.bad{border-color:#ff97a3;background:var(--red-soft);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.l-foot{border-top:2px solid #eef1f7;padding:16px 18px calc(18px + env(safe-area-inset-bottom))}
+.l-foot .in{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.l-foot.ok{background:var(--green-soft);border-color:transparent}
+.l-foot.bad{background:var(--red-soft);border-color:transparent}
+.fb{display:flex;align-items:center;gap:12px}
+.fb .i{width:46px;height:46px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:24px;flex:none}
+.fb b{display:block;font-size:20px;font-weight:900}
+.ok .fb b{color:var(--green-d)}
+.bad .fb b{color:var(--red-d)}
+.fb span{font-weight:800;color:var(--navy)}
+@container app (min-width:760px){
+  .l-foot .in{flex-direction:row;align-items:center;justify-content:space-between}
+  .l-foot .btn{min-width:200px}
+}
+.done-scr{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
+.done-scr svg{width:170px;height:170px;animation:bounce 1.2s infinite}
+.done-scr h2{margin:0;font-size:28px;font-weight:900;color:#f0a400}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:420px}
+.tile{border-radius:16px;border:2px solid;overflow:hidden;font-weight:900}
+.tile small{display:block;color:#fff;font-size:11.5px;padding:4px;text-transform:uppercase;letter-spacing:.04em}
+.tile div{padding:10px 4px;font-size:19px;background:#fff}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.sheet-wrap{position:absolute;inset:0;z-index:30;background:rgba(17,24,55,.45);display:none;align-items:flex-end;justify-content:center}
+.sheet-wrap.show{display:flex;animation:fade .2s}
+.sheet{background:#fff;width:100%;max-height:88%;overflow-y:auto;border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));animation:up .25s cubic-bezier(.2,.8,.3,1)}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:#dfe5f2;margin:0 auto 12px}
+.sheet h3{margin:0 0 4px;font-size:21px;font-weight:900;color:var(--navy)}
+.sheet .lead{margin:0 0 16px;color:var(--muted);font-weight:700;font-size:14px}
+.sheet .note{font-size:12px;color:var(--faint);font-weight:700;text-align:center;margin-top:10px}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+.lrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:2px solid var(--line);width:100%;text-align:left;margin-bottom:8px}
+.lrow.on{border-color:var(--blue);background:var(--blue-soft)}
+.lrow .fl{font-size:30px}
+.lrow b{display:block;font-weight:900;color:var(--navy)}
+.lrow small{color:var(--muted);font-weight:700;font-size:12.5px}
+.lrow .bar{width:80px;margin-left:auto;height:8px}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.day{flex:none;width:62px;padding:8px 0;border-radius:14px;border:2px solid var(--line);text-align:center;font-weight:800;font-size:12px;color:var(--muted)}
+.day b{display:block;font-size:18px;color:var(--navy)}
+.day.on{border-color:var(--blue);background:var(--blue-soft)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.slot{padding:10px 0;border-radius:12px;border:2px solid var(--line);font-weight:900;color:var(--navy)}
+.slot:disabled{color:#c3cadc;text-decoration:line-through;border-style:dashed}
+.slot.on{border-color:var(--blue);background:var(--blue);color:#fff}
+.durs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.plan{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;border:2px solid var(--line);width:100%;text-align:left;margin-bottom:8px;position:relative}
+.plan.on{border-color:var(--purple);background:#f4f0ff}
+.plan b{display:block;font-weight:900;color:var(--navy)}
+.plan small{color:var(--muted);font-weight:700}
+.plan .p{margin-left:auto;font-weight:900;color:var(--navy);text-align:right}
+.plan .save{position:absolute;top:-10px;right:14px;background:var(--purple);color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px}
+.feat{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px}
+.feat li{display:flex;gap:10px;align-items:center;font-weight:800;color:var(--navy)}
+.feat li span{width:30px;height:30px;border-radius:10px;background:var(--lav);display:grid;place-items:center}
+.nt{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f0f3fa}
+.nt .ic{font-size:24px}
+.nt b{display:block;font-weight:900;color:var(--navy);font-size:14.5px}
+.nt small{color:var(--muted);font-weight:700}
+.chat{display:flex;flex-direction:column;gap:8px;min-height:200px;max-height:300px;overflow-y:auto;padding:8px 2px;margin-bottom:10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:18px;font-weight:700;font-size:14px;line-height:1.35}
+.msg.them{background:#eef2fb;color:var(--navy);border-bottom-left-radius:6px}
+.msg.me{background:var(--blue);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.msg .who{display:block;font-size:11px;font-weight:900;opacity:.7;margin-bottom:2px}
+.cin{display:flex;gap:8px}
+.cin input{flex:1;border:2px solid var(--line);border-radius:999px;padding:11px 16px;font:inherit;font-weight:700;color:var(--navy);outline:none}
+.cin input:focus{border-color:#7ea0ff}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f3fa;font-weight:800;color:var(--navy)}
+.sw{width:48px;height:28px;border-radius:999px;background:#d6dceb;position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--green)}
+.sw.on::after{left:23px}
+.sel-in{border:2px solid var(--line);border-radius:12px;padding:8px 10px;font:inherit;font-weight:800;color:var(--navy);background:#fff}
+.wk{display:flex;align-items:flex-end;gap:10px;height:150px;padding:10px 0}
+.wk div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;font-size:12px;font-weight:800;color:var(--muted)}
+.wk i{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#7ea0ff,#2b59e8)}
+.wk div.today i{background:linear-gradient(180deg,#ffd84d,#ffae00)}
+.stars{display:flex;gap:6px;justify-content:center;font-size:36px;margin:8px 0 16px}
+.stars button{filter:grayscale(1);opacity:.4}
+.stars button.on{filter:none;opacity:1}
+
+.call{flex-direction:column;background:#0f1430;color:#fff}
+.call .vid{flex:1;position:relative;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2c3b7a,#0f1430 70%)}
+.call .vid .av{width:130px;height:130px;font-size:44px}
+.call .meta{position:absolute;top:18px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.call .meta b{display:block;font-size:18px}
+.call .meta small{opacity:.75}
+.call .rec{background:rgba(255,255,255,.12);padding:6px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
+.call .self{position:absolute;right:18px;bottom:18px;width:110px;height:150px;border-radius:18px;background:linear-gradient(160deg,#d6e6ff,#a8c6ff);display:grid;place-items:center;border:3px solid rgba(255,255,255,.3)}
+.call .self svg{width:80px;height:80px}
+.call .self.off{background:#232a4f}
+.call .self.off svg{display:none}
+.call .self.off::after{content:"Kamera kapalı";font-size:12px;font-weight:800;opacity:.7}
+.call .status{margin-top:14px;font-weight:800;opacity:.8;text-align:center}
+.call .sub{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.45);padding:8px 14px;border-radius:12px;font-weight:700;font-size:14px;max-width:70%;text-align:center}
+.ctrls{display:flex;justify-content:center;gap:16px;padding:18px 18px calc(22px + env(safe-area-inset-bottom))}
+.cb{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:24px}
+.cb.off{background:#fff;color:#0f1430}
+.cb.end{background:var(--red);width:72px}
+
+.toast{position:absolute;left:50%;top:18px;transform:translate(-50%,-20px);z-index:50;background:var(--navy);color:#fff;font-weight:800;font-size:14px;padding:12px 18px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="lion-base" viewBox="0 0 100 100">
+      <g fill="#b9541c"><circle cx="50" cy="14" r="13"/><circle cx="72" cy="20" r="13"/><circle cx="86" cy="38" r="13"/><circle cx="88" cy="60" r="13"/><circle cx="78" cy="80" r="13"/><circle cx="60" cy="90" r="13"/><circle cx="40" cy="90" r="13"/><circle cx="22" cy="80" r="13"/><circle cx="12" cy="60" r="13"/><circle cx="14" cy="38" r="13"/><circle cx="28" cy="20" r="13"/></g>
+      <circle cx="50" cy="52" r="38" fill="#d8691f"/>
+      <circle cx="27" cy="28" r="9" fill="#f3ad3d"/><circle cx="27" cy="28" r="4.5" fill="#e07b39"/>
+      <circle cx="73" cy="28" r="9" fill="#f3ad3d"/><circle cx="73" cy="28" r="4.5" fill="#e07b39"/>
+      <ellipse cx="50" cy="55" rx="29" ry="27" fill="#f7bb4f"/>
+      <ellipse cx="50" cy="68" rx="15" ry="11" fill="#fde6b8"/>
+      <circle cx="33" cy="64" r="5" fill="#f4907a" opacity=".45"/><circle cx="67" cy="64" r="5" fill="#f4907a" opacity=".45"/>
+      <path d="M44 61.5c0-2 12-2 12 0 0 2.5-4 5-6 5s-6-2.5-6-5z" fill="#5a2e1a"/>
+      <path d="M50 66v3M43 70c3 4 11 4 14 0" stroke="#5a2e1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lion" viewBox="0 0 100 100">
+      <use href="#lion-base" width="100" height="100"/>
+      <ellipse cx="40" cy="50" rx="5.5" ry="6.5" fill="#2a1a10"/><ellipse cx="60" cy="50" rx="5.5" ry="6.5" fill="#2a1a10"/>
+      <circle cx="42" cy="47.5" r="2" fill="#fff"/><circle cx="62" cy="47.5" r="2" fill="#fff"/>
+    </symbol>
+    <symbol id="lion-hoodie" viewBox="0 0 120 140">
+      <path d="M14 140c0-32 18-52 46-52s46 20 46 52z" fill="#2f5fd6"/>
+      <path d="M40 92c8 9 32 9 40 0" stroke="#1f47b0" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M50 100v14M70 100v14" stroke="#ffd76a" stroke-width="3" stroke-linecap="round"/>
+      <text x="60" y="134" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="24" fill="#fff">S</text>
+      <use href="#lion" x="10" y="0" width="100" height="100"/>
+    </symbol>
+    <symbol id="lion-read" viewBox="0 0 100 112">
+      <use href="#lion-base" width="100" height="100"/>
+      <path d="M34 50q6 5 12 0M54 50q6 5 12 0" stroke="#2a1a10" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M20 84l30 6 30-6v24l-30 4-30-4z" fill="#2f5fd6"/>
+      <path d="M24 88l26 5 26-5" stroke="#fff" stroke-width="1.5" fill="none" opacity=".6"/>
+      <path d="M50 90v22" stroke="#1f47b0" stroke-width="2"/>
+    </symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.2 12 3.8l9 7.4V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-lead" viewBox="0 0 24 24"><rect x="3" y="12" width="5" height="9" rx="1.5"/><rect x="9.5" y="4" width="5" height="17" rx="1.5"/><rect x="16" y="8.5" width="5" height="12.5" rx="1.5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M2.5 5.5C2.5 4.7 3.2 4 4 4h5.5c1.4 0 2.5 1.1 2.5 2.5V20c0-.8-.7-1.5-1.5-1.5H4c-.8 0-1.5-.7-1.5-1.5zM21.5 5.5c0-.8-.7-1.5-1.5-1.5h-5.5C13.1 4 12 5.1 12 6.5V20c0-.8.7-1.5 1.5-1.5H20c.8 0 1.5-.7 1.5-1.5z"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="5.5" width="13.5" height="13" rx="3.5"/><path d="M16.5 10.2 22 7v10l-5.5-3.2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5v4.3L3.8 16.6A1 1 0 0 0 4.7 18h14.6a1 1 0 0 0 .9-1.4l-1.7-3.3V9A6.5 6.5 0 0 0 12 2.5zM9.5 19.5a2.5 2.5 0 0 0 5 0z"/></symbol>
+  </defs>
+</svg>
+
+<header class="page-head">
+  <div>
+    <h1>Simba · Öğrenci arayüzü demosu</h1>
+    <p>Tıklanabilir prototip — veriler örnek, ödeme ve görüntülü görüşme simüle edilir.</p>
+  </div>
+  <div class="head-r">
+    <div class="seg" role="group" aria-label="Görünüm">
+      <button id="m-mobile" class="on">📱 Mobil</button>
+      <button id="m-web">🖥️ Web</button>
+    </div>
+    <a class="head-link" href="../docs/architecture.html">Teknik mimari →</a>
+  </div>
+</header>
+
+<div class="stage" id="stage" data-mode="mobile">
+  <div class="device">
+    <div class="app" id="app">
+      <div class="shell">
+        <aside class="side" id="side"></aside>
+        <div class="center">
+          <header class="topbar" id="topbar"></header>
+          <main class="main" id="main"></main>
+          <nav class="tabbar" id="tabbar"></nav>
+        </div>
+        <aside class="rail" id="rail"></aside>
+      </div>
+      <div class="ov lesson" id="lesson"></div>
+      <div class="ov call" id="call"></div>
+      <div class="sheet-wrap" id="sheet-wrap" data-act="sheetBg"><div class="sheet" id="sheet"></div></div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= data ================= */
+const LANGS = {
+  en: { name: "İngilizce", flag: "gb", tts: "en-US", marks: ["🗽", "🎡"],
+    greet: [["Hello"], ["Goodbye"], ["Thank you"], ["Please"]],
+    listen: [["Good morning"], ["Good night"], ["Good evening"], ["Good luck"]],
+    sent: ["My", "name", "is", "Simba"], distract: ["are", "you"], joiner: " ",
+    pairs: [["Hello", "Merhaba"], ["Thank you", "Teşekkürler"], ["Yes", "Evet"], ["No", "Hayır"]],
+    thanks: ["Thank you"], sub: {} },
+  zh: { name: "Çince", flag: "cn", tts: "zh-CN", marks: ["🏯", "🐉"],
+    greet: [["你好", "nǐ hǎo"], ["再见", "zàijiàn"], ["谢谢", "xièxie"], ["请", "qǐng"]],
+    listen: [["早上好", "zǎoshang hǎo"], ["晚安", "wǎn'ān"], ["晚上好", "wǎnshang hǎo"], ["你好", "nǐ hǎo"]],
+    sent: ["我", "叫", "Simba"], distract: ["你", "是"], joiner: "",
+    pairs: [["你好", "Merhaba"], ["谢谢", "Teşekkürler"], ["是", "Evet"], ["不", "Hayır"]],
+    thanks: ["谢谢", "xièxie"], sub: { "我": "wǒ", "叫": "jiào", "你": "nǐ", "是": "shì", "不": "bù", "你好": "nǐ hǎo", "谢谢": "xièxie" } },
+  ru: { name: "Rusça", flag: "ru", tts: "ru-RU", marks: ["🪆", "❄️"],
+    greet: [["Привет", "privet"], ["До свидания", "do svidaniya"], ["Спасибо", "spasibo"], ["Пожалуйста", "pozhaluysta"]],
+    listen: [["Доброе утро", "dobroye utro"], ["Спокойной ночи", "spokoynoy nochi"], ["Добрый вечер", "dobryy vecher"], ["Добрый день", "dobryy den'"]],
+    sent: ["Меня", "зовут", "Симба"], distract: ["Я", "ты"], joiner: " ",
+    pairs: [["Привет", "Merhaba"], ["Спасибо", "Teşekkürler"], ["Да", "Evet"], ["Нет", "Hayır"]],
+    thanks: ["Спасибо", "spasibo"], sub: { "Меня": "menya", "зовут": "zovut", "Симба": "Simba", "Я": "ya", "ты": "ty" } },
+  fr: { name: "Fransızca", flag: "fr", tts: "fr-FR", marks: ["🗼", "🥐"],
+    greet: [["Bonjour"], ["Au revoir"], ["Merci"], ["S'il vous plaît"]],
+    listen: [["Bonne nuit"], ["Bonsoir"], ["Bonjour"], ["Bon appétit"]],
+    sent: ["Je", "m'appelle", "Simba"], distract: ["suis", "tu"], joiner: " ",
+    pairs: [["Bonjour", "Merhaba"], ["Merci", "Teşekkürler"], ["Oui", "Evet"], ["Non", "Hayır"]],
+    thanks: ["Merci"], sub: {} },
+};
+const NODES = [
+  { icon: "📖", label: "Selamlaşma" },
+  { icon: "🎧", label: "Dinleme" },
+  { icon: "💬", label: "Konuşma" },
+  { icon: "🏆", label: "Ünite sınavı" },
+  { icon: "🎬", label: "Hikâye" },
+];
+const UNITS = [
+  { icon: "👋", t: "Selamlaşma", d: "Merhaba, hoşça kal, teşekkürler" },
+  { icon: "🙋", t: "Tanışma", d: "İsim, yaş, memleket" },
+  { icon: "🍜", t: "Yemek & İçecek", d: "Sipariş vermek, tatlar" },
+  { icon: "✈️", t: "Seyahat", d: "Havalimanı, otel, yol tarifi" },
+  { icon: "🛍️", t: "Alışveriş", d: "Fiyat sormak, pazarlık" },
+];
+const CREATOR = {
+  en: [
+    { e: "💼", t: "İş İngilizcesi: Toplantılar", by: "Ayşe K.", r: 4.9, n: 24, price: 149, bg: "#e6eeff" },
+    { e: "🎬", t: "Dizilerle İngilizce", by: "Can Ö.", r: 4.8, n: 40, prem: true, bg: "#ffe9da" },
+    { e: "🎤", t: "IELTS Speaking Hazırlık", by: "Elif D.", r: 4.7, n: 18, price: 249, bg: "#dcf6ea" },
+  ],
+  zh: [
+    { e: "📗", t: "HSK 1 Hızlı Başlangıç", by: "Mei L.", r: 4.9, n: 30, prem: true, bg: "#dcf6ea" },
+    { e: "✍️", t: "Çince Karakter Yazımı", by: "Burak T.", r: 4.8, n: 22, price: 129, bg: "#ffe3ee" },
+    { e: "🧳", t: "Seyahat Çincesi", by: "Selin A.", r: 4.6, n: 15, price: 99, bg: "#e6eeff" },
+  ],
+  ru: [
+    { e: "🔤", t: "Kiril Alfabesi 7 Günde", by: "Murat Y.", r: 4.9, n: 14, prem: true, bg: "#e6eeff" },
+    { e: "📐", t: "Rusça Dilbilgisi: Hâller", by: "Olga S.", r: 4.8, n: 32, price: 179, bg: "#eee8ff" },
+    { e: "📚", t: "Kısa Öykülerle Okuma", by: "Deniz B.", r: 4.7, n: 20, price: 119, bg: "#fff4d0" },
+  ],
+  fr: [
+    { e: "🥐", t: "Paris'te İlk Gün", by: "Zeynep E.", r: 4.9, n: 16, prem: true, bg: "#fff4d0" },
+    { e: "🎧", t: "Fransızca Telaffuz Atölyesi", by: "Camille D.", r: 4.8, n: 21, price: 139, bg: "#e6eeff" },
+    { e: "📝", t: "DELF A2 Hazırlık", by: "Kerem Ç.", r: 4.7, n: 28, price: 229, bg: "#dcf6ea" },
+  ],
+};
+const TEACHERS = {
+  en: [
+    { n: "Emily R.", f: "us", on: true, r: 4.9, l: 1240, p: 180, c: "#ff8a7a", tags: ["Konuşma", "İş İngilizcesi"], line: "Hi! Ready to practice some small talk?" },
+    { n: "James T.", f: "gb", on: true, r: 4.8, l: 860, p: 160, c: "#5b8bff", tags: ["IELTS", "Telaffuz"], line: "Let's start with your weekend plans." },
+    { n: "Grace M.", f: "ca", on: false, r: 5.0, l: 310, p: 200, c: "#a07bff", tags: ["Başlangıç", "Çocuklar"], line: "Hello! How are you today?" },
+  ],
+  zh: [
+    { n: "Li Wei", f: "cn", on: true, r: 4.9, l: 980, p: 190, c: "#ef5a5a", tags: ["HSK", "Tonlar"], line: "你好！我们开始吧。" },
+    { n: "Chen Mei", f: "cn", on: false, r: 4.8, l: 540, p: 170, c: "#ffae3c", tags: ["Konuşma", "Karakterler"], line: "你今天好吗？" },
+  ],
+  ru: [
+    { n: "Anna V.", f: "ru", on: true, r: 4.9, l: 720, p: 170, c: "#3cb8a0", tags: ["Konuşma", "Dilbilgisi"], line: "Привет! Как дела?" },
+    { n: "Dmitri K.", f: "ru", on: false, r: 4.7, l: 410, p: 150, c: "#5b8bff", tags: ["Başlangıç", "Okuma"], line: "Начнём урок!" },
+  ],
+  fr: [
+    { n: "Camille D.", f: "fr", on: true, r: 4.9, l: 860, p: 185, c: "#ff7aa8", tags: ["Telaffuz", "DELF"], line: "Bonjour ! Comment ça va ?" },
+    { n: "Lucas B.", f: "fr", on: true, r: 4.8, l: 390, p: 165, c: "#5b8bff", tags: ["Konuşma", "Seyahat"], line: "On commence ?" },
+    { n: "Chloé M.", f: "ca", on: false, r: 4.9, l: 260, p: 175, c: "#a07bff", tags: ["İş Fransızcası"], line: "Salut !" },
+  ],
+};
+const LEAGUE = [
+  { n: "SimbaKing", a: "🦁", g: 12450 }, { n: "Dreamer", a: "🐼", g: 10320 }, { n: "Linguist", a: "🐱", g: 9870 },
+  { n: "PolyglotAy", a: "🦊", g: 8420 }, { n: "Kelimeci", a: "🐨", g: 7210 }, { n: "BonjourBoy", a: "🐸", g: 5980 },
+  { n: "Matryoshka", a: "🐻", g: 4630 }, { n: "NiHao_99", a: "🐯", g: 3540 }, { n: "WordNinja", a: "🐵", g: 2890 },
+  { n: "Kitapkurdu", a: "🐰", g: 1720 }, { n: "Sabahçı", a: "🐧", g: 1210 },
+];
+const TABS = [
+  { id: "home", label: "Ana Sayfa", icon: "i-home" },
+  { id: "lead", label: "Liderlik", icon: "i-lead" },
+  { id: "courses", label: "Dersler", icon: "i-book" },
+  { id: "teachers", label: "Öğretmenler", icon: "i-video" },
+  { id: "profile", label: "Profil", icon: "i-user" },
+];
+
+/* ================= state ================= */
+const DEFAULT = {
+  lang: "en", tab: "home", streak: 15, gems: 4730, hearts: 5, weekly: 2450, premium: false, doneToday: false,
+  progress: { en: 0, zh: 0, ru: 0, fr: 0 }, mistakes: { en: [], zh: [], ru: [], fr: [] },
+  quests: { lessons: 0, correct: 0, minutes: 0 }, booked: [], owned: [],
+};
+let S = JSON.parse(JSON.stringify(DEFAULT));
+try { const saved = JSON.parse(localStorage.getItem("simba-demo") || "null"); if (saved) S = Object.assign(S, saved); } catch (e) {}
+function save() { try { localStorage.setItem("simba-demo", JSON.stringify(S)); } catch (e) {} }
+
+/* ================= helpers ================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = (n) => n.toLocaleString("tr-TR");
+const L = () => LANGS[S.lang];
+// Emoji bayraklar Windows'ta görünmediği için basit SVG bayraklar
+const star = (cx, cy, R) => Array.from({ length: 10 }, (_, i) => { const r = i % 2 ? R * 0.4 : R, a = Math.PI / 5 * i - Math.PI / 2; return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`; }).join(" ");
+const FLAGS = {
+  gb: `<rect width="30" height="20" fill="#012169"/><path d="M0 0l30 20M30 0 0 20" stroke="#fff" stroke-width="4"/><path d="M0 0l30 20M30 0 0 20" stroke="#c8102e" stroke-width="1.5"/><path d="M15 0v20M0 10h30" stroke="#fff" stroke-width="6"/><path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="3.4"/>`,
+  us: `<rect width="30" height="20" fill="#fff"/>${[0, 2, 4, 6, 8, 10, 12].map((i) => `<rect y="${(i * 20 / 13).toFixed(2)}" width="30" height="1.54" fill="#b22234"/>`).join("")}<rect width="13" height="10.77" fill="#3c3b6e"/>`,
+  ca: `<rect width="30" height="20" fill="#fff"/><rect width="7.5" height="20" fill="#d52b1e"/><rect x="22.5" width="7.5" height="20" fill="#d52b1e"/><polygon points="${star(15, 10.5, 5)}" fill="#d52b1e"/>`,
+  cn: `<rect width="30" height="20" fill="#de2910"/><polygon points="${star(6, 6, 3.6)}" fill="#ffde00"/><polygon points="${star(11.5, 2.5, 1.1)}" fill="#ffde00"/><polygon points="${star(13.5, 5, 1.1)}" fill="#ffde00"/><polygon points="${star(13.5, 8.3, 1.1)}" fill="#ffde00"/><polygon points="${star(11.5, 10.5, 1.1)}" fill="#ffde00"/>`,
+  ru: `<rect width="30" height="20" fill="#fff"/><rect y="6.67" width="30" height="6.67" fill="#0039a6"/><rect y="13.33" width="30" height="6.67" fill="#d52b1e"/>`,
+  fr: `<rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#002395"/><rect x="20" width="10" height="20" fill="#ed2939"/>`,
+  tr: `<rect width="30" height="20" fill="#e30a17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.3" cy="10" r="4" fill="#e30a17"/><polygon points="${star(18, 10, 2.4)}" fill="#fff" transform="rotate(-18 18 10)"/>`,
+};
+const flag = (c, h = 15) => `<svg class="flg" viewBox="0 0 30 20" width="${h * 1.5}" height="${h}" aria-hidden="true">${FLAGS[c] || ""}</svg>`;
+const icon = (id) => `<svg aria-hidden="true"><use href="#${id}"/></svg>`;
+const lionSvg = (id = "lion", cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+const initials = (n) => n.split(" ").map((p) => p[0]).join("").slice(0, 2);
+const avatar = (t, cls = "") => `<div class="av ${cls}" style="background:${t.c}">${esc(initials(t.n))}${t.on ? '<span class="on"></span>' : ""}</div>`;
+
+let toastT;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function speak(text, rate = 1) {
+  if (!("speechSynthesis" in window)) { toast("🔇 Tarayıcın sesli okumayı desteklemiyor"); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = L().tts; u.rate = rate;
+  const v = speechSynthesis.getVoices().find((v) => v.lang && v.lang.toLowerCase().startsWith(L().tts.slice(0, 2)));
+  if (v) u.voice = v;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function timeLeft() {
+  const now = new Date(), end = new Date(now); end.setHours(24, 0, 0, 0);
+  const m = Math.floor((end - now) / 60000);
+  return `${Math.floor(m / 60)}s ${m % 60}dk kaldı`;
+}
+function myRankList() {
+  return [...LEAGUE, { n: "Deniz (Sen)", a: "🦁", g: S.weekly, me: true }].sort((a, b) => b.g - a.g);
+}
+
+/* ================= shell ================= */
+function renderTop() {
+  const titles = { home: "Ana Sayfa", lead: "Liderlik", courses: "Dersler", teachers: "Öğretmenler", profile: "Profil" };
+  $("#topbar").innerHTML = `
+    <div class="logo"><button class="logo-btn" data-act="langSheet" title="Kursu değiştir">${lionSvg()}${flag(L().flag, 13)}</button><span>Simba</span></div>
+    <div class="page-title">${titles[S.tab]}</div>
+    <div class="tb-r">
+      <div class="pill">
+        <button class="it flag" data-act="langSheet" title="Kursu değiştir">${flag(L().flag)}</button>
+        <button class="it" data-act="streakInfo" title="Seri">🔥 ${S.streak}</button>
+        <button class="it" data-act="tab" data-arg="lead" title="Elmas">💎 ${fmt(S.gems)}</button>
+        <button class="it" data-act="heartsSheet" title="Can">❤️ ${S.premium ? "∞" : S.hearts}</button>
+      </div>
+      <button class="bell" data-act="notifs" aria-label="Bildirimler">${icon("i-bell")}<span class="dot"></span></button>
+    </div>`;
+}
+function renderNav() {
+  $("#tabbar").innerHTML = TABS.map((t) => `<button class="tab ${S.tab === t.id ? "on" : ""}" data-act="tab" data-arg="${t.id}">${icon(t.icon)}${t.label}</button>`).join("");
+  $("#side").innerHTML = `<div class="logo">${lionSvg()}<span>Simba</span></div>` +
+    TABS.map((t) => `<button class="navi ${S.tab === t.id ? "on" : ""}" data-act="tab" data-arg="${t.id}">${icon(t.icon)}${t.label}</button>`).join("") +
+    `<div class="spacer"></div>${premBanner()}`;
+}
+function renderRail() {
+  const top = myRankList();
+  const meIdx = top.findIndex((p) => p.me);
+  $("#rail").innerHTML = `
+    <div class="card" style="padding:16px">
+      <div class="sec-h"><h3>🏆 Altın Lig</h3><button class="link" data-act="tab" data-arg="lead">Tümü ›</button></div>
+      ${top.slice(0, 3).map((p, i) => `<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 1}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`).join("")}
+      ${meIdx > 2 ? `<div class="lr me"><span class="r">${meIdx + 1}</span><span class="a">🦁</span><span class="n">Deniz (Sen)</span><span class="g">${fmt(S.weekly)} 💎</span></div>` : ""}
+    </div>
+    ${questsCard()}
+    ${teacherPromo()}`;
+}
+function render() {
+  renderTop(); renderNav(); renderRail();
+  const views = { home: viewHome, lead: viewLead, courses: viewCourses, teachers: viewTeachers, profile: viewProfile };
+  $("#main").innerHTML = `<div class="main-inner">${views[S.tab]()}</div>`;
+}
+
+/* ================= shared blocks ================= */
+function questsCard() {
+  const q = S.quests;
+  const items = [
+    { ic: "▶️", t: "1 ders tamamla", v: Math.min(q.lessons, 1), max: 1 },
+    { ic: "⭐", t: "5 doğru cevap", v: Math.min(q.correct, 5), max: 5 },
+    { ic: "🔥", t: "10 dakika çalış", v: Math.min(q.minutes, 10), max: 10 },
+  ];
+  return `<div class="card quests">
+    <div class="sec-h"><h3>📅 Bugünün Görevleri</h3><span class="timer" data-timer>⏱ ${timeLeft()}</span></div>
+    <div class="qrow">${items.map((i) => `<div class="q ${i.v >= i.max ? "ok" : ""}"><div class="ic">${i.ic}</div>${i.t}<span class="n">${i.v} / ${i.max}</span></div>`).join("")}</div>
+  </div>`;
+}
+function premBanner() {
+  return S.premium
+    ? `<button class="prem on" data-act="premium"><span class="em">👑</span><span><b>Premium aktif</b><small>Sınırsız can açık</small></span></button>`
+    : `<button class="prem" data-act="premium"><span class="em">👑</span><span><b>Simba Premium</b><small>Daha hızlı ilerle!</small></span><span class="go">Yükselt ›</span></button>`;
+}
+function teacherPromo() {
+  const ts = TEACHERS[S.lang]; const online = ts.filter((t) => t.on);
+  return `<button class="card tpromo" data-act="tab" data-arg="teachers">
+    <div class="avs">${online.slice(0, 3).map((t) => avatar(t, "sm")).join("")}</div>
+    <span><b>Gerçek öğretmenle konuş</b><small><span class="live">${online.length} öğretmen çevrimiçi</span></small></span>
+    <span style="margin-left:auto;font-weight:900;color:var(--navy)">›</span>
+  </button>`;
+}
+
+/* ================= views ================= */
+function viewHome() {
+  const p = S.progress[S.lang], stars = p * 10, mis = S.mistakes[S.lang].length;
+  const path = NODES.map((n, i) => {
+    const st = i < p ? "done" : i === p ? "cur" : "lock";
+    const x = [0, 34, -24, 30, -12][i];
+    return `<div class="node-w ${st === "cur" ? "has-tip" : ""}" style="transform:translateX(${x}px)">
+      <button class="node ${st}" data-act="node" data-arg="${i}" aria-label="${n.label}">${n.icon}${st === "lock" ? '<span class="mini">🔒</span>' : st === "done" ? '<span class="mini">✅</span>' : ""}</button>
+      ${st === "cur" ? `<span class="tip">${p === 0 ? "İlk dersini başlat!" : "Sıradaki ders!"}</span>` : ""}
+      <span class="node-lbl">${n.label}</span>
+    </div>`;
+  }).join("");
+  return `
+    <section class="hero">
+      <h2>${p === 0 ? "Hoş geldin!" : "Gelişimin harika!"}</h2>
+      <p>${p >= NODES.length ? "Üniteyi bitirdin, tekrar zamanı!" : "Bir sonraki dersi başlayalım mı?"}</p>
+      <button class="btn btn-y" data-act="continue">Devam Et ▶</button>
+      <span class="spark">✨</span>
+      <div class="marks"><span>${L().marks[0]}</span><span>${L().marks[1]}</span></div>
+      ${lionSvg("lion-hoodie", "lion")}
+    </section>
+    <div class="quick">
+      <button class="qc lav" data-act="mistakes"><span class="em">📘</span><span><b>Ekstra Çalışma</b><small>Hatalı cümlelerini tekrar et</small></span><span class="chev">›</span>${mis ? `<span class="cnt">${mis}</span>` : ""}</button>
+      <button class="qc mint" data-act="practice"><span class="em">🎯</span><span><b>Alıştırmalar</b><small>Kendini sına</small></span><span class="chev">›</span></button>
+    </div>
+    <section class="unit">
+      <div class="unit-l">
+        <button class="lvl" data-act="tab" data-arg="courses"><span class="em">🏆</span><span><b>Seviye 1</b><small>Başlangıç · ${L().name}</small></span></button>
+        <div class="readcard">
+          <div class="pic">${lionSvg("lion-read")}</div>
+          <div class="st"><b>⭐ ${stars} / 50</b><div class="bar"><i style="width:${stars * 2}%"></i></div></div>
+        </div>
+      </div>
+      <div class="path">${path}</div>
+    </section>
+    <div class="mobile-only">${questsCard()}</div>
+    <div class="mobile-only">${teacherPromo()}</div>
+    <div class="mobile-only">${premBanner()}</div>`;
+}
+
+function viewLead() {
+  const list = myRankList();
+  const [a, b, c] = list;
+  const pod = (p, k) => `<div class="pd p${k}"><div class="ava">${p.a}</div><div class="base"><div class="rk">${k}</div><div class="nm">${esc(p.n)}</div><div class="gm">${fmt(p.g)} 💎</div></div></div>`;
+  return `
+    <section class="card league">
+      <div class="sec-h"><h3>🏆 Altın Lig</h3><span class="timer">Hafta bitiyor: 3g 4s</span></div>
+      <div class="sub" style="color:var(--muted);font-weight:700;font-size:14px">Dünyadaki diğer öğrencilerle yarış! İlk 5, Elmas Lig'e yükselir.</div>
+      <div class="podium">${pod(b, 2)}${pod(a, 1)}${pod(c, 3)}</div>
+    </section>
+    <section class="card lb">
+      ${list.slice(3).map((p, i) => `${i + 4 === 6 ? '<div class="zone">▲ Terfi bölgesi</div>' : ""}<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 4}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`).join("")}
+    </section>`;
+}
+
+function viewCourses() {
+  const p = S.progress[S.lang];
+  const units = UNITS.map((u, i) => {
+    const pct = i === 0 ? Math.round(p / NODES.length * 100) : 0;
+    const locked = i > 0 && p < NODES.length;
+    return `<button class="ur ${locked ? "lk" : ""}" data-act="${locked ? "lockedUnit" : "tab"}" data-arg="home">
+      <span class="ic">${locked ? "🔒" : u.icon}</span>
+      <span class="tx"><b>Ünite ${i + 1} · ${u.t}</b><small>${u.d}</small>${i === 0 ? `<div class="bar"><i style="width:${pct}%"></i></div>` : ""}</span>
+      <span style="font-weight:900;color:var(--navy)">${i === 0 ? pct + "%" : "›"}</span>
+    </button>`;
+  }).join("");
+  const cc = CREATOR[S.lang].map((c, i) => {
+    const own = S.owned.includes(S.lang + i);
+    return `<button class="card cc" data-act="course" data-arg="${i}">
+      <div class="cv" style="background:${c.bg}">${c.e}</div>
+      <div class="ci"><b>${esc(c.t)}</b><small>${esc(c.by)} · ⭐ ${c.r} · ${c.n} ders</small>
+        <div class="ft">${own ? '<span class="badge green">Kütüphanende</span>' : c.prem ? '<span class="badge purple">👑 Premium\'a dahil</span>' : `<span class="price">₺${c.price}</span>`}<span class="badge">İçerik üretici</span></div>
+      </div></button>`;
+  }).join("");
+  return `
+    <section class="card chead"><span class="fl">${flag(L().flag, 30)}</span><span><b>${L().name} kursu</b><small>Türkçe konuşanlar için · A1</small></span><button class="link" style="margin-left:auto" data-act="langSheet">Değiştir</button></section>
+    <section><div class="sec-h"><h3>📚 Resmi müfredat</h3><span class="sub">Simba ekibi</span></div><div class="card units">${units}</div></section>
+    <section><div class="sec-h"><h3>🎬 İçerik üreticilerden</h3><span class="sub">Simba Studio</span></div><div class="cgrid">${cc}</div></section>`;
+}
+
+let teacherFilter = "all";
+function viewTeachers() {
+  let ts = TEACHERS[S.lang];
+  if (teacherFilter === "on") ts = ts.filter((t) => t.on);
+  const up = S.booked.length ? `<section><div class="sec-h"><h3>🗓️ Yaklaşan derslerin</h3></div>${S.booked.map((b) => `<div class="card upc" style="margin-bottom:8px">${avatar(b.t, "sm")}<span><b>${esc(b.t.n)} · ${b.dur} dk</b><small>${b.when}</small></span><span class="badge green" style="margin-left:auto">Onaylandı</span></div>`).join("")}</section>` : "";
+  return `
+    ${up}
+    <div class="chips">
+      <button class="chipb ${teacherFilter === "all" ? "on" : ""}" data-act="tfilter" data-arg="all">Tümü</button>
+      <button class="chipb ${teacherFilter === "on" ? "on" : ""}" data-act="tfilter" data-arg="on">🟢 Şimdi müsait</button>
+      ${Object.entries(LANGS).map(([k, v]) => `<button class="chipb ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}">${flag(LANGS[k].flag)} ${v.name}</button>`).join("")}
+    </div>
+    <div class="tgrid">${ts.map((t) => {
+      const i = TEACHERS[S.lang].indexOf(t);
+      return `<div class="card tc">
+        <div class="tc-top">${avatar(t)}<div><b>${esc(t.n)} ${flag(t.f)}</b><small>⭐ ${t.r} · ${fmt(t.l)} ders · ${t.on ? '<span class="live">Çevrimiçi</span>' : "Çevrimdışı"}</small></div></div>
+        <div class="tags">${t.tags.map((g) => `<span class="badge">${g}</span>`).join("")}</div>
+        <div class="acts"><span class="price">₺${t.p} <small>/ 25 dk</small></span>
+          <button class="btn btn-w" data-act="book" data-arg="${i}">Takvim</button>
+          ${t.on ? `<button class="btn btn-g" data-act="callNow" data-arg="${i}">Şimdi Görüş</button>` : ""}
+        </div></div>`;
+    }).join("")}</div>`;
+}
+
+function viewProfile() {
+  const menu = [
+    { ic: "👑", t: "Premium'a Yükselt", d: "Daha fazla özellik, daha fazla öğrenme", a: "premium", bg: "#eee8ff" },
+    { ic: "📊", t: "İstatistiklerim", d: "Öğrenme ilerlemeni gör", a: "stats", bg: "#e6eeff" },
+    { ic: "⭐", t: "Favori Derslerim", d: "En sevdiğin dersler burada", a: "favs", bg: "#fff4d0" },
+    { ic: "⚙️", t: "Ayarlar", d: "Dil, bildirim ve daha fazlası", a: "settings", bg: "#eef1f7" },
+    { ic: "❓", t: "Yardım & Destek", d: "Soruların mı var?", a: "support", bg: "#e6eeff" },
+    { ic: "🚪", t: "Çıkış Yap", d: "Hesabından çıkış yap", a: "logout", bg: "#ffe3e7" },
+  ];
+  return `
+    <section class="ph">
+      <div class="big">${lionSvg()}</div>
+      <div><h2>Deniz Yılmaz <span class="vf">✓</span></h2><span class="ctry">${flag("tr")} Türkiye ›</span><q>Her gün biraz daha iyi! 🐾</q></div>
+    </section>
+    <section class="card fstats"><div><b>12</b>Takip Edilen</div><div><b>8.5K</b>Takipçiler</div><div><b>24</b>Arkadaşlar</div></section>
+    <section class="card ach">
+      <div class="sec-h"><h3>🏆 Başarılarım</h3><button class="link" data-act="soon">Hepsini Gör ›</button></div>
+      <div class="medals">
+        <div class="medal"><div class="m" style="background:#fff1c7">⭐</div><b>${S.streak} Gün</b><small>Seri</small></div>
+        <div class="medal"><div class="m" style="background:#e6eeff">📘</div><b>${50 + S.quests.lessons} Ders</b><small>Tamamlandı</small></div>
+        <div class="medal"><div class="m" style="background:#ffe9da">🔥</div><b>5 Hafta</b><small>Aktiflik</small></div>
+        <div class="medal"><div class="m" style="background:#ffe3e7">🎯</div><b>%95</b><small>Doğruluk</small></div>
+      </div>
+    </section>
+    <section class="card menu">${menu.map((m) => `<button class="mi" data-act="${m.a}"><span class="ic" style="background:${m.bg}">${m.ic}</span><span><b>${m.t}</b><small>${m.d}</small></span><span class="chev">›</span></button>`).join("")}</section>`;
+}
+
+/* ================= lesson engine ================= */
+function buildExercises(lang) {
+  const D = LANGS[lang];
+  const opts = (arr, okIdx = 0) => shuffle(arr.map((o, i) => ({ t: o[0], s: o[1], ok: i === okIdx })));
+  return [
+    { kind: "choice", title: "Doğru çeviriyi seç", prompt: "“Merhaba” nasıl söylenir?", opts: opts(D.greet), speakOpts: true },
+    { kind: "listen", title: "Duyduğunu seç", audio: D.listen[0][0], opts: opts(D.listen), speakOpts: true },
+    { kind: "arrange", title: "Bu cümleyi çevir", prompt: "Benim adım Simba.", answer: D.sent, bank: shuffle([...D.sent, ...D.distract]) },
+    { kind: "match", title: "Eşleri bul" , pairs: D.pairs },
+    { kind: "choice", title: "Bu ne demek?", word: D.thanks[0], wordSub: D.thanks[1], opts: opts([["Teşekkürler"], ["Lütfen"], ["Hoşça kal"], ["Özür dilerim"]]) },
+  ].map((e, i) => ({ ...e, id: i }));
+}
+let LS = null;
+function startLesson(mode, node) {
+  if (!S.premium && S.hearts <= 0) { openSheet(heartsSheet); return; }
+  let q = buildExercises(S.lang);
+  if (mode === "mistakes") q = q.filter((x) => S.mistakes[S.lang].includes(x.id));
+  if (mode === "practice") q = shuffle(q);
+  LS = { mode, node, q, i: 0, total: q.length, correct: 0, wrong: 0, start: Date.now(), sel: null, arr: [], checked: false, ok: false, match: null };
+  $("#lesson").classList.add("show");
+  renderLesson();
+}
+const cur = () => LS.q[LS.i];
+function sub(word) { const s = L().sub[word]; return s ? `<small>${esc(s)}</small>` : ""; }
+
+function renderLesson() {
+  const ex = cur(), D = L();
+  const pct = Math.round(LS.correct / LS.total * 100);
+  const tag = { lesson: `${NODES[LS.node].icon} ${NODES[LS.node].label}`, practice: "🎯 Alıştırma", mistakes: "📘 Ekstra çalışma" }[LS.mode];
+  let body = "", canCheck = false;
+
+  if (ex.kind === "choice" || ex.kind === "listen") {
+    canCheck = LS.sel !== null;
+    const head = ex.kind === "listen"
+      ? `<div class="listen"><button class="spk" data-act="say" data-arg="${esc(ex.audio)}" aria-label="Dinle">🔊</button><button class="spk slow" data-act="saySlow" data-arg="${esc(ex.audio)}" aria-label="Yavaş dinle">🐢</button></div>`
+      : ex.word
+        ? `<div class="word"><button class="spk" data-act="say" data-arg="${esc(ex.word)}" aria-label="Dinle">🔊</button><span>${esc(ex.word)}${ex.wordSub ? `<small>${esc(ex.wordSub)}</small>` : ""}</span></div>`
+        : `<div class="say">${lionSvg()}<div class="bubble">${esc(ex.prompt)}</div></div>`;
+    body = head + `<div class="opts">${ex.opts.map((o, i) => {
+      let c = LS.sel === i ? "sel" : "";
+      if (LS.checked) c = o.ok ? "right" : LS.sel === i ? "wrong" : "";
+      return `<button class="opt ${c}" data-act="pick" data-arg="${i}" ${LS.checked ? "disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o.t)}${o.s ? `<small>${esc(o.s)}</small>` : ""}</span></button>`;
+    }).join("")}</div>`;
+  } else if (ex.kind === "arrange") {
+    canCheck = LS.arr.length > 0;
+    body = `<div class="say">${lionSvg()}<div class="bubble">${esc(ex.prompt)}</div></div>
+      <div class="aline">${LS.arr.map((b, k) => `<button class="wchip" data-act="unarr" data-arg="${k}" ${LS.checked ? "disabled" : ""}>${esc(ex.bank[b])}${sub(ex.bank[b])}</button>`).join("")}</div>
+      <div class="bank">${ex.bank.map((w, b) => `<button class="wchip ${LS.arr.includes(b) ? "used" : ""}" data-act="arr" data-arg="${b}" ${LS.checked || LS.arr.includes(b) ? "disabled" : ""}>${esc(w)}${sub(w)}</button>`).join("")}</div>`;
+  } else if (ex.kind === "match") {
+    if (!LS.match) LS.match = { l: shuffle(ex.pairs.map((_, i) => i)), r: shuffle(ex.pairs.map((_, i) => i)), sl: null, sr: null, done: [], bad: null };
+    const M = LS.match;
+    const cell = (side, i) => {
+      const txt = side === "l" ? ex.pairs[i][0] : ex.pairs[i][1];
+      const c = M.done.includes(i) ? "done" : M["s" + side] === i ? "sel" : M.bad && M.bad[side] === i ? "bad" : "";
+      return `<button class="mb ${c}" data-act="m${side}" data-arg="${i}" ${M.done.includes(i) || LS.checked ? "disabled" : ""}>${esc(txt)}${side === "l" ? sub(txt) : ""}</button>`;
+    };
+    body = `<div class="match"><div class="col">${M.l.map((i) => cell("l", i)).join("")}</div><div class="col">${M.r.map((i) => cell("r", i)).join("")}</div></div>`;
+  }
+
+  let foot;
+  if (LS.checked) {
+    const right = rightAnswer(ex);
+    const good = ["Harika!", "Mükemmel!", "Süper!", "Aferin!"][Math.floor(Math.random() * 4)];
+    foot = `<div class="l-foot ${LS.ok ? "ok" : "bad"}"><div class="in">
+      <div class="fb"><span class="i">${LS.ok ? "✅" : "❌"}</span><div><b>${LS.ok ? good : "Doğru cevap:"}</b>${LS.ok ? "" : `<span>${esc(right)}</span>`}</div></div>
+      <button class="btn ${LS.ok ? "btn-g" : "btn-r"} btn-block" data-act="next" autofocus>Devam</button></div></div>`;
+  } else {
+    foot = `<div class="l-foot"><div class="in"><span style="color:var(--muted);font-weight:800;font-size:13px">${ex.kind === "match" ? "Kelimeleri anlamlarıyla eşleştir" : "İpucu: 1–4 tuşları ve Enter çalışır"}</span>
+      <button class="btn btn-g btn-block" data-act="check" ${canCheck ? "" : "disabled"}>${ex.kind === "match" ? "Eşleştir" : "Kontrol Et"}</button></div></div>`;
+  }
+
+  $("#lesson").innerHTML = `
+    <div class="l-head"><button class="x" data-act="quit" aria-label="Dersten çık">✕</button><div class="bar"><i style="width:${pct}%"></i></div><span class="hearts">❤️ ${S.premium ? "∞" : S.hearts}</span></div>
+    <div class="l-body"><div class="l-tag">${tag}</div><h2>${ex.title}</h2>${body}</div>
+    ${foot}`;
+  if (ex.kind === "listen" && !LS.checked && LS.sel === null && !LS.played) { LS.played = true; setTimeout(() => speak(ex.audio), 250); }
+}
+function rightAnswer(ex) {
+  if (ex.kind === "arrange") return ex.answer.join(L().joiner);
+  if (ex.opts) { const o = ex.opts.find((o) => o.ok); return o.t + (o.s ? ` (${o.s})` : ""); }
+  return "";
+}
+function check() {
+  const ex = cur(); let ok = true;
+  if (ex.kind === "choice" || ex.kind === "listen") ok = ex.opts[LS.sel].ok;
+  else if (ex.kind === "arrange") ok = LS.arr.map((b) => ex.bank[b]).join("|") === ex.answer.join("|");
+  LS.checked = true; LS.ok = ok;
+  if (ok) {
+    LS.correct++; S.quests.correct++;
+    if (LS.mode === "mistakes") S.mistakes[S.lang] = S.mistakes[S.lang].filter((id) => id !== ex.id);
+  } else {
+    LS.wrong++;
+    if (!S.premium) S.hearts = Math.max(0, S.hearts - 1);
+    if (!S.mistakes[S.lang].includes(ex.id)) S.mistakes[S.lang].push(ex.id);
+    LS.q.push(buildExercises(S.lang)[ex.id]);
+  }
+  save(); renderTop(); renderLesson();
+}
+function next() {
+  if (!S.premium && S.hearts <= 0) { closeLesson(); openSheet(heartsSheet); return; }
+  LS.i++; LS.sel = null; LS.arr = []; LS.checked = false; LS.match = null; LS.played = false;
+  if (LS.i >= LS.q.length) return finishLesson();
+  renderLesson();
+}
+function finishLesson() {
+  const sec = Math.round((Date.now() - LS.start) / 1000);
+  const acc = Math.round(LS.total / (LS.total + LS.wrong) * 100);
+  const earned = (LS.mode === "lesson" ? 20 : 10) + (LS.wrong === 0 ? 5 : 0);
+  S.gems += earned; S.weekly += earned;
+  S.quests.lessons++; S.quests.minutes += Math.max(1, Math.round(sec / 60));
+  if (LS.mode === "lesson" && LS.node === S.progress[S.lang] && S.progress[S.lang] < NODES.length) S.progress[S.lang]++;
+  let streakUp = false;
+  if (!S.doneToday) { S.doneToday = true; S.streak++; streakUp = true; }
+  save();
+  $("#lesson").innerHTML = `<div class="done-scr">
+    ${lionSvg("lion-hoodie")}
+    <h2>${LS.mode === "lesson" ? "Ders tamamlandı!" : "Çalışma tamamlandı!"}</h2>
+    <div style="color:var(--muted);font-weight:800">${LS.wrong === 0 ? "Hatasız! +5 bonus elmas 🎉" : "Hataların Ekstra Çalışma'ya eklendi."}</div>
+    <div class="tiles">
+      <div class="tile" style="border-color:#5b8bff"><small style="background:#5b8bff">Elmas</small><div>💎 +${earned}</div></div>
+      <div class="tile" style="border-color:#1fb873"><small style="background:#1fb873">Doğruluk</small><div>🎯 %${acc}</div></div>
+      <div class="tile" style="border-color:#ffb800"><small style="background:#ffb800">Süre</small><div>⏱ ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}</div></div>
+    </div>
+    <button class="btn btn-y" style="min-width:240px;margin-top:10px" data-act="closeDone" data-arg="${streakUp ? 1 : 0}">Devam Et</button>
+  </div>`;
+}
+function closeLesson() { $("#lesson").classList.remove("show"); $("#lesson").innerHTML = ""; LS = null; render(); }
+
+/* ================= sheets ================= */
+let sheetFn = null;
+function openSheet(fn) { sheetFn = fn; $("#sheet").innerHTML = '<div class="grab"></div>' + fn(); $("#sheet-wrap").classList.add("show"); }
+function refreshSheet() { if (sheetFn) $("#sheet").innerHTML = '<div class="grab"></div>' + sheetFn(); }
+function closeSheet() { $("#sheet-wrap").classList.remove("show"); sheetFn = null; }
+
+function langSheet() {
+  return `<h3>Kurs seç</h3><p class="lead">Türkçe konuşanlar için</p>` +
+    Object.entries(LANGS).map(([k, v]) => `<button class="lrow ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}"><span class="fl">${flag(LANGS[k].flag)}</span><span><b>${v.name}</b><small>${S.progress[k]} / ${NODES.length} ders · Seviye 1</small></span><div class="bar"><i style="width:${S.progress[k] / NODES.length * 100}%"></i></div></button>`).join("") +
+    `<p class="note">Yeni diller Simba Studio'dan içerik eklenerek açılır.</p>`;
+}
+function heartsSheet() {
+  return `<h3>${S.hearts <= 0 ? "Canın bitti 💔" : "Canların ❤️ " + S.hearts + " / 5"}</h3>
+    <p class="lead">Yanlış cevaplar can götürür. Canlar 4 saatte bir yenilenir.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-b btn-block" data-act="premium">👑 Premium ile sınırsız can</button>
+      <button class="btn btn-w btn-block" data-act="refill" ${S.gems < 350 || S.hearts >= 5 ? "disabled" : ""}>Canları doldur · 💎 350</button>
+      <button class="btn btn-w btn-block" data-act="closeSheet">Kapat</button>
+    </div>`;
+}
+let premPlan = "y";
+function premiumSheet() {
+  return `<div style="text-align:center;font-size:56px">👑</div><h3 style="text-align:center">Simba Premium</h3><p class="lead" style="text-align:center">Daha fazla özellik, daha hızlı ilerleme!</p>
+    <ul class="feat"><li><span>❤️</span>Sınırsız can</li><li><span>📘</span>Kişisel hata tekrarı (aralıklı tekrar)</li><li><span>🎬</span>Premium'a dahil creator kursları</li><li><span>👩‍🏫</span>Her ay 1 ücretsiz öğretmen dersi</li><li><span>🚫</span>Reklamsız</li></ul>
+    <button class="plan ${premPlan === "y" ? "on" : ""}" data-act="plan" data-arg="y"><span class="save">%50 indirim</span><span><b>Yıllık</b><small>₺74,99 / ay</small></span><span class="p">₺899,99<br><small>/ yıl</small></span></button>
+    <button class="plan ${premPlan === "m" ? "on" : ""}" data-act="plan" data-arg="m"><span><b>Aylık</b><small>İstediğin zaman iptal</small></span><span class="p">₺149,99<br><small>/ ay</small></span></button>
+    <button class="btn btn-y btn-block" style="margin-top:6px" data-act="buyPremium">${S.premium ? "Premium zaten aktif" : "7 gün ücretsiz dene"}</button>
+    <p class="note">Demo — ödeme alınmaz. Mobilde App Store / Google Play, web'de iyzico.</p>`;
+}
+let BK = null;
+function bookSheet() {
+  const t = TEACHERS[S.lang][BK.t];
+  const now = new Date();
+  const days = Array.from({ length: 6 }, (_, i) => { const d = new Date(now); d.setDate(d.getDate() + i); return d; });
+  const dn = (d, i) => i === 0 ? "Bugün" : i === 1 ? "Yarın" : d.toLocaleDateString("tr-TR", { weekday: "short" });
+  const slots = ["09:00", "10:30", "13:00", "17:30", "19:00", "20:30", "21:30", "22:30", "23:00"];
+  const busy = (d, s) => (d * 7 + s * 3) % 4 === 0 || (d === 0 && s < 4);
+  const price = BK.dur === 25 ? t.p : Math.round(t.p * 1.8);
+  return `<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${avatar(t)}<div><h3>${esc(t.n)} ${flag(t.f)}</h3><div style="color:var(--muted);font-weight:700;font-size:13px">⭐ ${t.r} · ${t.tags.join(" · ")}</div></div></div>
+    <div class="days">${days.map((d, i) => `<button class="day ${BK.day === i ? "on" : ""}" data-act="bday" data-arg="${i}">${dn(d, i)}<b>${d.getDate()}</b></button>`).join("")}</div>
+    <div class="slots">${slots.map((s, i) => `<button class="slot ${BK.slot === s ? "on" : ""}" data-act="bslot" data-arg="${s}" ${busy(BK.day, i) ? "disabled" : ""}>${s}</button>`).join("")}</div>
+    <div class="durs"><button class="btn ${BK.dur === 25 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="25">25 dk</button><button class="btn ${BK.dur === 50 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="50">50 dk</button></div>
+    <button class="btn btn-y btn-block" data-act="bconfirm" ${BK.slot ? "" : "disabled"}>${BK.slot ? `Rezervasyonu onayla · ₺${price}` : "Bir saat seç"}</button>
+    <p class="note">Saatler senin saat diliminde gösterilir (Europe/Istanbul).</p>`;
+}
+function notifSheet() {
+  const up = S.booked[0];
+  return `<h3>Bildirimler</h3>
+    <div class="nt"><span class="ic">🔥</span><div><b>Serini koru!</b><small>${S.doneToday ? "Bugünkü dersini yaptın, harika!" : "Bugün henüz ders yapmadın."}</small></div></div>
+    ${up ? `<div class="nt"><span class="ic">👩‍🏫</span><div><b>${esc(up.t.n)} ile dersin var</b><small>${up.when}</small></div></div>` : ""}
+    <div class="nt"><span class="ic">🏆</span><div><b>Altın Lig'de yükseliyorsun</b><small>Terfi bölgesine ${fmt(Math.max(0, LEAGUE[4].g - S.weekly))} 💎 kaldı</small></div></div>
+    <div class="nt"><span class="ic">🎬</span><div><b>Yeni kurs: ${esc(CREATOR[S.lang][0].t)}</b><small>${esc(CREATOR[S.lang][0].by)} yeni ders ekledi</small></div></div>`;
+}
+let chatLog = [{ me: false, t: "Merhaba Deniz 👋 Simba Destek'e hoş geldin. Nasıl yardımcı olabiliriz?" }];
+function supportSheet() {
+  return `<h3>Yardım & Destek</h3><p class="lead">Mesajın Simba Admin panelindeki destek ekibine iletilir.</p>
+    <div class="chat" id="chat">${chatLog.map((m) => `<div class="msg ${m.me ? "me" : "them"}">${m.me ? "" : '<span class="who">Destek ekibi</span>'}${esc(m.t)}</div>`).join("")}</div>
+    <form class="cin" data-form="chat"><input id="chat-in" placeholder="Mesajını yaz…" autocomplete="off"><button class="btn btn-b" style="padding:10px 18px">Gönder</button></form>`;
+}
+const settings = { notif: true, sfx: true, remind: true };
+function settingsSheet() {
+  const row = (k, t) => `<div class="tog">${t}<button class="sw ${settings[k] ? "on" : ""}" data-act="sw" data-arg="${k}" aria-label="${t}"></button></div>`;
+  return `<h3>Ayarlar</h3>
+    <div class="tog">Arayüz dili <select class="sel-in" data-change="uiLang"><option>Türkçe</option><option>English</option><option>Русский</option><option>Türkmençe</option></select></div>
+    ${row("notif", "Bildirimler")}${row("sfx", "Ses efektleri")}${row("remind", "Seri hatırlatıcı (20:00)")}
+    <div class="tog">Günlük hedef <select class="sel-in"><option>5 dk · Rahat</option><option selected>10 dk · Normal</option><option>20 dk · Ciddi</option></select></div>
+    <button class="btn btn-w btn-block" style="margin-top:14px" data-act="reset">Demo verisini sıfırla</button>`;
+}
+function statsSheet() {
+  const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+  const vals = [12, 8, 15, 10, 6, 18];
+  const today = Math.min(20, S.quests.minutes);
+  return `<h3>İstatistiklerim</h3><p class="lead">Bu hafta · ${vals.reduce((a, b) => a + b, 0) + today} dakika</p>
+    <div class="wk">${[...vals, today].map((v, i) => `<div class="${i === 6 ? "today" : ""}"><i style="height:${Math.max(4, v / 20 * 100)}%"></i>${days[i]}</div>`).join("")}</div>
+    <div class="fstats card" style="margin-top:10px"><div><b>${S.streak}</b>Gün seri</div><div><b>${fmt(S.gems)}</b>Elmas</div><div><b>${Object.values(S.progress).reduce((a, b) => a + b, 0)}</b>Ders</div></div>`;
+}
+let rateVal = 0, rateT = null;
+function rateSheet() {
+  return `<div style="text-align:center"><div style="display:flex;justify-content:center;margin-bottom:10px">${avatar(rateT)}</div><h3>${esc(rateT.n)} ile ders nasıldı?</h3><p class="lead">Değerlendirmen öğretmen profilinde görünür.</p>
+    <div class="stars">${[1, 2, 3, 4, 5].map((n) => `<button class="${n <= rateVal ? "on" : ""}" data-act="rate" data-arg="${n}">⭐</button>`).join("")}</div>
+    <button class="btn btn-y btn-block" data-act="rateSend" ${rateVal ? "" : "disabled"}>Gönder</button></div>`;
+}
+function courseSheet(i) {
+  const c = CREATOR[S.lang][i], own = S.owned.includes(S.lang + i);
+  return `<div style="height:110px;border-radius:20px;display:grid;place-items:center;font-size:56px;background:${c.bg};margin-bottom:14px">${c.e}</div>
+    <h3>${esc(c.t)}</h3><p class="lead">${esc(c.by)} · ⭐ ${c.r} · ${c.n} ders · Video + egzersiz</p>
+    <ul class="feat"><li><span>🎥</span>Kısa video dersler</li><li><span>✍️</span>Her dersin sonunda alıştırma</li><li><span>📜</span>Tamamlama rozeti</li></ul>
+    ${own ? `<button class="btn btn-g btn-block" data-act="closeSheet">Kütüphanende ✓</button>`
+      : c.prem ? `<button class="btn btn-b btn-block" data-act="${S.premium ? "own" : "premium"}" data-arg="${i}">${S.premium ? "Başla (Premium)" : "👑 Premium ile aç"}</button>`
+      : `<button class="btn btn-y btn-block" data-act="own" data-arg="${i}">Satın al · ₺${c.price}</button>`}
+    <p class="note">Gelirin %70'i içerik üreticisine gider. Demo — ödeme alınmaz.</p>`;
+}
+
+/* ================= video call (mock) ================= */
+let callT = null, callSec = 0, callState = {};
+function openCall(t) {
+  callSec = 0; callState = { t, mic: true, cam: true };
+  const ov = $("#call"); ov.classList.add("show");
+  ov.innerHTML = `<div class="vid">
+      <div class="meta"><div><b>${esc(t.n)} ${flag(t.f)}</b><small>${L().name} · 25 dk ders</small></div><span class="rec" id="ctime">Bağlanıyor…</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center">${avatar(t)}<div class="status" id="cstat">Öğretmen bekleniyor…</div></div>
+      <div class="self" id="cself">${lionSvg()}</div>
+      <div class="sub" id="csub" hidden></div>
+    </div>
+    <div class="ctrls">
+      <button class="cb" data-act="cmic" aria-label="Mikrofon">🎙️</button>
+      <button class="cb" data-act="ccam" aria-label="Kamera">📷</button>
+      <button class="cb" data-act="cchat" aria-label="Kelime notu">📝</button>
+      <button class="cb end" data-act="cend" aria-label="Görüşmeyi bitir">📞</button>
+    </div>`;
+  setTimeout(() => {
+    if (!callState.t) return;
+    $("#cstat").textContent = "Bağlandı · HD";
+    const s = $("#csub"); s.hidden = false; s.textContent = `${t.n}: ${t.line}`;
+    callT = setInterval(() => { callSec++; const e = $("#ctime"); if (e) e.textContent = `● ${String(Math.floor(callSec / 60)).padStart(2, "0")}:${String(callSec % 60).padStart(2, "0")}`; }, 1000);
+  }, 1500);
+}
+function endCall() {
+  clearInterval(callT); const t = callState.t; callState = {};
+  $("#call").classList.remove("show"); $("#call").innerHTML = "";
+  rateT = t; rateVal = 0; openSheet(rateSheet);
+}
+
+/* ================= actions ================= */
+const A = {
+  tab: (t) => { S.tab = t; save(); render(); $("#main").scrollTop = 0; },
+  continue: () => startLesson("lesson", Math.min(S.progress[S.lang], NODES.length - 1)),
+  node: (i) => { i = +i; if (i > S.progress[S.lang]) return toast("🔒 Önce önceki dersi tamamla"); startLesson("lesson", i); },
+  mistakes: () => S.mistakes[S.lang].length ? startLesson("mistakes") : toast("🎉 Tekrar edilecek hatan yok. Bir ders yap!"),
+  practice: () => startLesson("practice"),
+  langSheet: () => openSheet(langSheet),
+  setLang: (k) => { S.lang = k; save(); closeSheet(); render(); toast(`${LANGS[k].name} kursuna geçtin`); },
+  streakInfo: () => toast(`🔥 ${S.streak} günlük seri! ${S.doneToday ? "Bugünü tamamladın." : "Bugün bir ders yapmayı unutma."}`),
+  heartsSheet: () => openSheet(heartsSheet),
+  refill: () => { S.gems -= 350; S.hearts = 5; save(); closeSheet(); render(); toast("❤️ Canların doldu!"); },
+  notifs: () => openSheet(notifSheet),
+  premium: () => openSheet(premiumSheet),
+  plan: (p) => { premPlan = p; refreshSheet(); },
+  buyPremium: () => { if (!S.premium) { S.premium = true; save(); render(); toast("👑 Premium aktif — sınırsız can!"); } closeSheet(); },
+  closeSheet: () => closeSheet(),
+  sheetBg: (_, el, e) => { if (e.target === el) closeSheet(); },
+  lockedUnit: () => toast("🔒 Önce Ünite 1'i bitir"),
+  course: (i) => openSheet(() => courseSheet(+i)),
+  own: (i) => { S.owned.push(S.lang + i); save(); closeSheet(); render(); toast("📚 Kurs kütüphanene eklendi"); },
+  tfilter: (f) => { teacherFilter = f; render(); },
+  book: (i) => { BK = { t: +i, day: 1, slot: null, dur: 25 }; openSheet(bookSheet); },
+  bday: (d) => { BK.day = +d; BK.slot = null; refreshSheet(); },
+  bslot: (s) => { BK.slot = s; refreshSheet(); },
+  bdur: (d) => { BK.dur = +d; refreshSheet(); },
+  bconfirm: () => {
+    const t = TEACHERS[S.lang][BK.t]; const d = new Date(); d.setDate(d.getDate() + BK.day);
+    const when = `${BK.day === 0 ? "Bugün" : BK.day === 1 ? "Yarın" : d.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })} · ${BK.slot}`;
+    S.booked.unshift({ t, dur: BK.dur, when }); save(); closeSheet(); render(); toast(`✅ ${t.n} ile ders rezerve edildi`);
+  },
+  callNow: (i) => openCall(TEACHERS[S.lang][+i]),
+  cmic: (_, el) => { callState.mic = !callState.mic; el.classList.toggle("off", !callState.mic); el.textContent = callState.mic ? "🎙️" : "🔇"; },
+  ccam: (_, el) => { callState.cam = !callState.cam; el.classList.toggle("off", !callState.cam); $("#cself").classList.toggle("off", !callState.cam); },
+  cchat: () => toast("📝 Ders notları: öğretmenin yazdığı kelimeler burada görünür"),
+  cend: () => endCall(),
+  rate: (n) => { rateVal = +n; refreshSheet(); },
+  rateSend: () => { closeSheet(); toast("🙏 Teşekkürler! Değerlendirmen kaydedildi."); },
+  stats: () => openSheet(statsSheet),
+  settings: () => openSheet(settingsSheet),
+  sw: (k) => { settings[k] = !settings[k]; refreshSheet(); },
+  support: () => { openSheet(supportSheet); const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight; },
+  favs: () => toast("⭐ Henüz favori dersin yok"),
+  soon: () => toast("🏅 Tüm başarılar yakında"),
+  logout: () => toast("🙂 Demo modunda çıkış yapılamaz"),
+  reset: () => { S = JSON.parse(JSON.stringify(DEFAULT)); save(); closeSheet(); render(); toast("Demo verisi sıfırlandı"); },
+  say: (t) => speak(t),
+  saySlow: (t) => speak(t, 0.6),
+  pick: (i) => { if (LS.checked) return; LS.sel = +i; const o = cur().opts[LS.sel]; if (cur().speakOpts) speak(o.t); renderLesson(); },
+  arr: (b) => { b = +b; if (LS.checked || LS.arr.includes(b)) return; LS.arr.push(b); speak(cur().bank[b]); renderLesson(); },
+  unarr: (k) => { if (LS.checked) return; LS.arr.splice(+k, 1); renderLesson(); },
+  ml: (i) => matchPick("l", +i),
+  mr: (i) => matchPick("r", +i),
+  check: () => { const ex = cur(); if (ex.kind === "match") return; check(); },
+  next: () => next(),
+  quit: () => { closeLesson(); toast("Ders yarıda bırakıldı — ilerleme kaydedilmedi"); },
+  closeDone: (up) => { closeLesson(); if (up === "1") setTimeout(() => toast(`🔥 Serin ${S.streak} gün oldu!`), 300); },
+};
+function matchPick(side, i) {
+  const M = LS.match, ex = cur();
+  M.bad = null; M["s" + side] = i;
+  if (side === "l") speak(ex.pairs[i][0]);
+  if (M.sl !== null && M.sr !== null) {
+    if (M.sl === M.sr) M.done.push(M.sl);
+    else { M.bad = { l: M.sl, r: M.sr }; LS.wrong++; }
+    M.sl = M.sr = null;
+  }
+  if (M.done.length === ex.pairs.length) { check(); return; }
+  renderLesson();
+}
+
+/* ================= events ================= */
+$("#app").addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el || el.disabled) return;
+  const fn = A[el.dataset.act];
+  if (fn) fn(el.dataset.arg, el, e);
+});
+$("#app").addEventListener("submit", (e) => {
+  if (e.target.dataset.form !== "chat") return;
+  e.preventDefault();
+  const inp = $("#chat-in"), t = inp.value.trim(); if (!t) return;
+  chatLog.push({ me: true, t }); refreshSheet();
+  setTimeout(() => {
+    chatLog.push({ me: false, t: `Talebin alındı (#${48000 + Math.floor(Math.random() * 999)}). Bir destek uzmanı birkaç dakika içinde buradan yanıt verecek.` });
+    if (sheetFn === supportSheet) { refreshSheet(); const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight; }
+  }, 900);
+  const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight;
+  setTimeout(() => $("#chat-in") && $("#chat-in").focus(), 0);
+});
+$("#app").addEventListener("change", (e) => {
+  if (e.target.dataset.change === "uiLang" && e.target.value !== "Türkçe") toast("🌐 Diğer arayüz dilleri i18n paketiyle eklenecek");
+});
+document.addEventListener("keydown", (e) => {
+  if (!LS || !$("#lesson").classList.contains("show")) return;
+  const ex = cur(); if (!ex) return;
+  if (e.key === "Enter") { e.preventDefault(); if (LS.checked) next(); else if (ex.kind !== "match" && (LS.sel !== null || LS.arr.length)) check(); }
+  else if (!LS.checked && ex.opts && /^[1-4]$/.test(e.key)) A.pick(+e.key - 1);
+});
+const stage = $("#stage");
+function setMode(m) {
+  stage.dataset.mode = m;
+  $("#m-mobile").classList.toggle("on", m === "mobile"); $("#m-web").classList.toggle("on", m === "web");
+  try { localStorage.setItem("simba-demo-mode", m); } catch (e) {}
+}
+$("#m-mobile").onclick = () => setMode("mobile");
+$("#m-web").onclick = () => setMode("web");
+try { const m = localStorage.getItem("simba-demo-mode"); if (m) setMode(m); } catch (e) {}
+setInterval(() => document.querySelectorAll("[data-timer]").forEach((el) => (el.textContent = "⏱ " + timeLeft())), 30000);
+if ("speechSynthesis" in window) speechSynthesis.getVoices();
+render();
+</script>
+</body>
+</html>

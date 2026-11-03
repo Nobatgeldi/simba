@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "simba-demo",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5173", "--directory", "C:/Users/KARAOK_1/Documents/GitHub/simba"],
+      "port": 5173
+    }
+  ]
+}
