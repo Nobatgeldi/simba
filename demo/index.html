@@ -138,7 +138,15 @@ button:disabled{cursor:default}
 .hero .marks{position:absolute;right:190px;bottom:12px;font-size:40px;display:none;gap:8px;opacity:.9}
 .hero .spark{position:absolute;right:150px;top:56px;font-size:20px}
 
-.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.quick{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.qc > span:nth-child(2){min-width:0;overflow-wrap:break-word}
+/* Dar ekranda ikon üstte: Türkmence/Rusça uzun kelimeler bölünmeden sığar */
+@container app (max-width:480px){
+  .qc{flex-direction:column;align-items:flex-start;gap:6px}
+  .qc .chev{position:absolute;right:14px;top:14px}
+  .qc .cnt{right:32px;top:12px}
+  .qc b{font-size:15px}
+}
 .qc{display:flex;align-items:center;gap:8px;padding:14px 12px;border-radius:22px;text-align:left;box-shadow:var(--shadow);position:relative}
 .qc .em{font-size:28px;line-height:1}
 .qc b{display:block;font-size:15.5px;font-weight:900;color:var(--navy)}
@@ -260,7 +268,9 @@ button:disabled{cursor:default}
 .tc-top small{display:block;color:var(--muted);font-weight:700;font-size:13px}
 .tc .tags{display:flex;gap:6px;flex-wrap:wrap}
 .tc .acts{display:flex;gap:8px;align-items:center}
-.tc .acts .price{margin-right:auto;font-size:15px}
+.tc .acts .price{margin-right:auto;font-size:15px;white-space:nowrap}
+.tc .acts{flex-wrap:wrap}
+.tc .acts .btn{white-space:nowrap}
 .tc .acts .price small{font-weight:700;color:var(--muted);font-size:12px}
 .tc .btn{padding:10px 16px;font-size:14px}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
@@ -434,7 +444,7 @@ button:disabled{cursor:default}
 .call .self svg{width:80px;height:80px}
 .call .self.off{background:#232a4f}
 .call .self.off svg{display:none}
-.call .self.off::after{content:"Kamera kapalı";font-size:12px;font-weight:800;opacity:.7}
+.call .self.off::after{content:attr(data-off);font-size:12px;font-weight:800;opacity:.7}
 .call .status{margin-top:14px;font-weight:800;opacity:.8;text-align:center}
 .call .sub{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.45);padding:8px 14px;border-radius:12px;font-weight:700;font-size:14px;max-width:70%;text-align:center}
 .ctrls{display:flex;justify-content:center;gap:16px;padding:18px 18px calc(22px + env(safe-area-inset-bottom))}
@@ -491,15 +501,20 @@ button:disabled{cursor:default}
 
 <header class="page-head">
   <div>
-    <h1>Simba · Öğrenci arayüzü demosu</h1>
-    <p>Tıklanabilir prototip — veriler örnek, ödeme ve görüntülü görüşme simüle edilir.</p>
+    <h1 id="ph-title"></h1>
+    <p id="ph-sub"></p>
   </div>
   <div class="head-r">
-    <div class="seg" role="group" aria-label="Görünüm">
-      <button id="m-mobile" class="on">📱 Mobil</button>
-      <button id="m-web">🖥️ Web</button>
+    <div class="seg" role="group" aria-label="Language" id="ui-seg">
+      <button data-ui="tk">Türkmençe</button>
+      <button data-ui="ru">Русский</button>
+      <button data-ui="tr">Türkçe</button>
     </div>
-    <a class="head-link" href="../docs/architecture.html">Teknik mimari →</a>
+    <div class="seg" role="group" aria-label="View">
+      <button id="m-mobile" class="on"></button>
+      <button id="m-web"></button>
+    </div>
+    <a class="head-link" id="ph-arch" href="../docs/architecture.html"></a>
   </div>
 </header>
 
@@ -524,119 +539,298 @@ button:disabled{cursor:default}
 </div>
 
 <script>
+/* ================= arayüz dilleri ================= */
+// Arayüz dili aynı zamanda kursların kaynak dilidir (ör. Türkmence konuşan biri İngilizceyi Türkmence açıklamalarla öğrenir).
+const LOCALES = {
+  tk: { tag: "tk-TM", label: "Türkmençe", country: "tm" },
+  ru: { tag: "ru-RU", label: "Русский", country: "tm" },
+  tr: { tag: "tr-TR", label: "Türkçe", country: "tr" },
+};
+const I18N = {
+  tr: {
+    phTitle: "Simba · Öğrenci arayüzü demosu", phSub: "Tıklanabilir prototip — veriler örnek, ödeme ve görüntülü görüşme simüle edilir.",
+    mMobile: "📱 Mobil", mWeb: "🖥️ Web", arch: "Teknik mimari →",
+    nav: { home: "Ana Sayfa", lead: "Liderlik", courses: "Dersler", teachers: "Öğretmenler", profile: "Profil" },
+    langNames: { en: "İngilizce", zh: "Çince", ru: "Rusça", fr: "Fransızca" },
+    changeCourse: "Kursu değiştir", streak: "Seri", gems: "Elmas", hearts: "Can", notifs: "Bildirimler",
+    questsTitle: "Bugünün Görevleri", q1: "1 ders tamamla", q2: "5 doğru cevap", q3: "10 dakika çalış", timeLeft: "{h}s {m}dk kaldı",
+    premOn: "Premium aktif", premOnSub: "Sınırsız can açık", premSub: "Daha hızlı ilerle!", premGo: "Yükselt ›",
+    talk: "Gerçek öğretmenle konuş", online: "{n} öğretmen çevrimiçi",
+    league: "Altın Lig", all: "Tümü ›", you: "Sen",
+    me: { name: "Deniz Yılmaz", first: "Deniz", country: "Türkiye", quote: "Her gün biraz daha iyi! 🐾" },
+    welcome: "Hoş geldin!", great: "Gelişimin harika!", nextQ: "Bir sonraki dersi başlayalım mı?", unitDone: "Üniteyi bitirdin, tekrar zamanı!", cont: "Devam Et ▶",
+    extra: "Ekstra Çalışma", extraSub: "Hatalı cümlelerini tekrar et", practice: "Alıştırmalar", practiceSub: "Kendini sına",
+    level: "Seviye 1", beginner: "Başlangıç", tipFirst: "İlk dersini başlat!", tipNext: "Sıradaki ders!",
+    nodes: ["Selamlaşma", "Dinleme", "Konuşma", "Ünite sınavı", "Hikâye"],
+    leadSub: "Dünyadaki diğer öğrencilerle yarış! İlk 5, Elmas Lig'e yükselir.", weekEnds: "Hafta bitiyor: 3g 4s", promo: "▲ Terfi bölgesi",
+    speakers: "Türkçe konuşanlar için · A1", change: "Değiştir", official: "Resmi müfredat", team: "Simba ekibi", fromCreators: "İçerik üreticilerden",
+    unit: "Ünite {n}", units: [["Selamlaşma", "Merhaba, hoşça kal, teşekkürler"], ["Tanışma", "İsim, yaş, memleket"], ["Yemek & İçecek", "Sipariş vermek, tatlar"], ["Seyahat", "Havalimanı, otel, yol tarifi"], ["Alışveriş", "Fiyat sormak, pazarlık"]],
+    nLessons: "{n} ders", inLibrary: "Kütüphanende", inPremium: "👑 Premium'a dahil", creator: "İçerik üretici", unitLocked: "🔒 Önce Ünite 1'i bitir",
+    ctitles: { en: ["İş İngilizcesi: Toplantılar", "Dizilerle İngilizce", "IELTS Speaking Hazırlık"], zh: ["HSK 1 Hızlı Başlangıç", "Çince Karakter Yazımı", "Seyahat Çincesi"], ru: ["Kiril Alfabesi 7 Günde", "Rusça Dilbilgisi: Hâller", "Kısa Öykülerle Okuma"], fr: ["Paris'te İlk Gün", "Fransızca Telaffuz Atölyesi", "DELF A2 Hazırlık"] },
+    tAll: "Tümü", tFree: "🟢 Şimdi müsait", tMyLang: "💬 Türkçe bilenler", online1: "Çevrimiçi", offline: "Çevrimdışı", per25: "/ 25 dk", calendar: "Takvim", callNow: "Şimdi Görüş", upcoming: "Yaklaşan derslerin", confirmed: "Onaylandı", speaks: "Konuşur",
+    tags: { talk: "Konuşma", biz: "İş İngilizcesi", ielts: "IELTS", pron: "Telaffuz", begin: "Başlangıç", kids: "Çocuklar", hsk: "HSK", tones: "Tonlar", chars: "Karakterler", gram: "Dilbilgisi", read: "Okuma", delf: "DELF", travel: "Seyahat", bizfr: "İş Fransızcası" },
+    following: "Takip Edilen", followers: "Takipçiler", friends: "Arkadaşlar", achievements: "Başarılarım", seeAll: "Hepsini Gör ›",
+    mDays: "{n} Gün", mStreak: "Seri", mLessons: "{n} Ders", mDone: "Tamamlandı", mWeeks: "{n} Hafta", mActive: "Aktiflik", mAcc: "%{n}", mAccL: "Doğruluk",
+    menu: [["Premium'a Yükselt", "Daha fazla özellik, daha fazla öğrenme"], ["İstatistiklerim", "Öğrenme ilerlemeni gör"], ["Favori Derslerim", "En sevdiğin dersler burada"], ["Ayarlar", "Dil, bildirim ve daha fazlası"], ["Yardım & Destek", "Soruların mı var?"], ["Çıkış Yap", "Hesabından çıkış yap"]],
+    noFavs: "⭐ Henüz favori dersin yok", soon: "🏅 Tüm başarılar yakında", noLogout: "🙂 Demo modunda çıkış yapılamaz",
+    tagPractice: "🎯 Alıştırma", tagExtra: "📘 Ekstra çalışma",
+    exChoice: "Doğru çeviriyi seç", exListen: "Duyduğunu seç", exArrange: "Bu cümleyi çevir", exMatch: "Eşleri bul", exMeaning: "Bu ne demek?",
+    promptHello: "“{w}” nasıl söylenir?",
+    src: { hello: "Merhaba", sentence: "Benim adım Simba.", pairs: ["Merhaba", "Teşekkürler", "Evet", "Hayır"], thanks: ["Teşekkürler", "Lütfen", "Hoşça kal", "Özür dilerim"] },
+    praise: ["Harika!", "Mükemmel!", "Süper!", "Aferin!"], rightAnswer: "Doğru cevap:", next: "Devam", matchHint: "Kelimeleri anlamlarıyla eşleştir", keyHint: "İpucu: 1–4 tuşları ve Enter çalışır", doMatch: "Eşleştir", check: "Kontrol Et",
+    quitLesson: "Dersten çık", listenA: "Dinle", slowA: "Yavaş dinle",
+    lessonDone: "Ders tamamlandı!", practiceDone: "Çalışma tamamlandı!", perfect: "Hatasız! +5 bonus elmas 🎉", mistakesAdded: "Hataların Ekstra Çalışma'ya eklendi.", accuracy: "Doğruluk", time: "Süre",
+    locked: "🔒 Önce önceki dersi tamamla", noMistakes: "🎉 Tekrar edilecek hatan yok. Bir ders yap!", switched: "{lang} kursuna geçtin",
+    streakToast: "🔥 {n} günlük seri! {m}", streakDone: "Bugünü tamamladın.", streakTodo: "Bugün bir ders yapmayı unutma.", streakUp: "🔥 Serin {n} gün oldu!",
+    refilled: "❤️ Canların doldu!", premiumOn: "👑 Premium aktif — sınırsız can!", owned: "📚 Kurs kütüphanene eklendi", booked: "✅ {n} ile ders rezerve edildi",
+    callNotes: "📝 Ders notları: öğretmenin yazdığı kelimeler burada görünür", rated: "🙏 Teşekkürler! Değerlendirmen kaydedildi.", reset: "Demo verisi sıfırlandı", quit: "Ders yarıda bırakıldı — ilerleme kaydedilmedi",
+    noTts: "🔇 Tarayıcın sesli okumayı desteklemiyor", uiChanged: "🌐 Arayüz dili: Türkçe",
+    chooseCourse: "Kurs seç", courseProg: "{p} / 5 ders · Seviye 1", newLangs: "Yeni diller Simba Studio'dan içerik eklenerek açılır.",
+    noHearts: "Canın bitti 💔", heartsN: "Canların ❤️ {n} / 5", heartsLead: "Yanlış cevaplar can götürür. Canlar 4 saatte bir yenilenir.", heartsPrem: "👑 Premium ile sınırsız can", refill: "Canları doldur · 💎 350", close: "Kapat",
+    premLead: "Daha fazla özellik, daha hızlı ilerleme!", feats: ["Sınırsız can", "Kişisel hata tekrarı (aralıklı tekrar)", "Premium'a dahil creator kursları", "Her ay 1 ücretsiz öğretmen dersi", "Reklamsız"],
+    yearly: "Yıllık", monthly: "Aylık", save50: "%50 indirim", perMonth: "/ ay", perYear: "/ yıl", cancelAny: "İstediğin zaman iptal", trial: "7 gün ücretsiz dene", premAlready: "Premium zaten aktif",
+    prices: { m: "₺149,99", y: "₺899,99", ym: "₺74,99" }, premNote: "Demo — ödeme alınmaz. Mobilde App Store / Google Play, web'de iyzico.",
+    code: "Aktivasyon kodum var", codePh: "SIMBA-XXXX-XXXX", codeBtn: "Etkinleştir", codeBad: "Kod geçersiz. Örnek: SIMBA-2026-TM01", codeOk: "🎟️ Kod kabul edildi — Premium 30 gün aktif",
+    bookConfirm: "Rezervasyonu onayla · {p}", pickTime: "Bir saat seç", min: "{n} dk", today: "Bugün", tomorrow: "Yarın", tzNote: "Saatler senin saat diliminde gösterilir ({tz}).",
+    nKeep: "Serini koru!", nKeepDone: "Bugünkü dersini yaptın, harika!", nKeepTodo: "Bugün henüz ders yapmadın.", nLesson: "{n} ile dersin var", nLeague: "Altın Lig'de yükseliyorsun", nLeagueSub: "Terfi bölgesine {g} 💎 kaldı", nCourse: "Yeni kurs: {t}", nCourseSub: "{by} yeni ders ekledi",
+    support: "Yardım & Destek", supportLead: "Mesajın Simba Admin panelindeki destek ekibine iletilir.", supportHi: "Merhaba {name} 👋 Simba Destek'e hoş geldin. Nasıl yardımcı olabiliriz?", supportTeam: "Destek ekibi", msgPh: "Mesajını yaz…", send: "Gönder", supportReply: "Talebin alındı (#{id}). Bir destek uzmanı birkaç dakika içinde buradan yanıt verecek.",
+    settings: "Ayarlar", uiLang: "Arayüz dili", sfx: "Ses efektleri", remind: "Seri hatırlatıcı (20:00)", goal: "Günlük hedef", goals: ["5 dk · Rahat", "10 dk · Normal", "20 dk · Ciddi"], resetBtn: "Demo verisini sıfırla",
+    stats: "İstatistiklerim", thisWeek: "Bu hafta · {n} dakika", dayStreak: "Gün seri", lessonsL: "Ders",
+    rateQ: "{n} ile ders nasıldı?", rateLead: "Değerlendirmen öğretmen profilinde görünür.",
+    courseMeta: "{by} · ⭐ {r} · {n} ders · Video + egzersiz", cfeats: ["Kısa video dersler", "Her dersin sonunda alıştırma", "Tamamlama rozeti"], inLib: "Kütüphanende ✓", startPrem: "Başla (Premium)", openPrem: "👑 Premium ile aç", buy: "Satın al · {p}", courseNote: "Gelirin %70'i içerik üreticisine gider. Demo — ödeme alınmaz.",
+    callMeta: "{lang} · 25 dk ders", connecting: "Bağlanıyor…", waiting: "Öğretmen bekleniyor…", connected: "Bağlandı · HD", camOff: "Kamera kapalı", micA: "Mikrofon", camA: "Kamera", notesA: "Kelime notu", endA: "Görüşmeyi bitir",
+  },
+  ru: {
+    phTitle: "Simba · Демо интерфейса ученика", phSub: "Кликабельный прототип: данные примерные, оплата и видеозвонок имитируются.",
+    mMobile: "📱 Мобильный", mWeb: "🖥️ Веб", arch: "Архитектура (на турецком) →",
+    nav: { home: "Главная", lead: "Рейтинг", courses: "Курсы", teachers: "Преподаватели", profile: "Профиль" },
+    langNames: { en: "Английский", zh: "Китайский", ru: "Русский", fr: "Французский" },
+    changeCourse: "Сменить курс", streak: "Серия", gems: "Алмазы", hearts: "Жизни", notifs: "Уведомления",
+    questsTitle: "Задания на сегодня", q1: "Пройди 1 урок", q2: "5 верных ответов", q3: "Занимайся 10 минут", timeLeft: "осталось {h} ч {m} мин",
+    premOn: "Premium активен", premOnSub: "Безлимитные жизни", premSub: "Учись быстрее!", premGo: "Подключить ›",
+    talk: "Поговори с настоящим преподавателем", online: "Сейчас онлайн: {n}",
+    league: "Золотая лига", all: "Все ›", you: "Вы",
+    me: { name: "Мерджен Аннаева", first: "Мерджен", country: "Туркменистан", quote: "Каждый день чуть лучше! 🐾" },
+    welcome: "Добро пожаловать!", great: "Отличный прогресс!", nextQ: "Начнём следующий урок?", unitDone: "Раздел пройден — пора повторить!", cont: "Продолжить ▶",
+    extra: "Работа над ошибками", extraSub: "Повтори фразы с ошибками", practice: "Упражнения", practiceSub: "Проверь себя",
+    level: "Уровень 1", beginner: "Начальный", tipFirst: "Начни первый урок!", tipNext: "Следующий урок!",
+    nodes: ["Приветствие", "Аудирование", "Разговор", "Тест раздела", "История"],
+    leadSub: "Соревнуйся с учениками со всего мира! Первые 5 переходят в Алмазную лигу.", weekEnds: "До конца недели: 3 д 4 ч", promo: "▲ Зона повышения",
+    speakers: "Для русскоговорящих · A1", change: "Сменить", official: "Официальная программа", team: "Команда Simba", fromCreators: "От авторов",
+    unit: "Раздел {n}", units: [["Приветствие", "Привет, пока, спасибо"], ["Знакомство", "Имя, возраст, откуда ты"], ["Еда и напитки", "Заказ, вкусы"], ["Путешествия", "Аэропорт, отель, дорога"], ["Покупки", "Цены, торг"]],
+    nLessons: "уроков: {n}", inLibrary: "В библиотеке", inPremium: "👑 Входит в Premium", creator: "Автор", unitLocked: "🔒 Сначала пройди раздел 1",
+    ctitles: { en: ["Деловой английский: встречи", "Английский по сериалам", "Подготовка к IELTS Speaking"], zh: ["HSK 1: быстрый старт", "Пишем иероглифы", "Китайский для путешествий"], ru: ["", "", ""], fr: ["Первый день в Париже", "Французское произношение", "Подготовка к DELF A2"] },
+    tAll: "Все", tFree: "🟢 Свободны сейчас", tMyLang: "💬 Говорят по-русски", online1: "Онлайн", offline: "Не в сети", per25: "/ 25 мин", calendar: "Расписание", callNow: "Позвонить", upcoming: "Ближайшие уроки", confirmed: "Подтверждено", speaks: "Говорит",
+    tags: { talk: "Разговорный", biz: "Деловой английский", ielts: "IELTS", pron: "Произношение", begin: "Для начинающих", kids: "Дети", hsk: "HSK", tones: "Тоны", chars: "Иероглифы", gram: "Грамматика", read: "Чтение", delf: "DELF", travel: "Путешествия", bizfr: "Деловой французский" },
+    following: "Подписки", followers: "Подписчики", friends: "Друзья", achievements: "Мои достижения", seeAll: "Все ›",
+    mDays: "{n} дн.", mStreak: "Серия", mLessons: "{n} ур.", mDone: "Пройдено", mWeeks: "{n} нед.", mActive: "Активность", mAcc: "{n}%", mAccL: "Точность",
+    menu: [["Перейти на Premium", "Больше возможностей, больше практики"], ["Моя статистика", "Смотри свой прогресс"], ["Избранные уроки", "Твои любимые уроки здесь"], ["Настройки", "Язык, уведомления и другое"], ["Помощь и поддержка", "Есть вопросы?"], ["Выйти", "Выйти из аккаунта"]],
+    noFavs: "⭐ Пока нет избранных уроков", soon: "🏅 Все достижения — скоро", noLogout: "🙂 В демо-режиме выйти нельзя",
+    tagPractice: "🎯 Упражнение", tagExtra: "📘 Работа над ошибками",
+    exChoice: "Выбери правильный перевод", exListen: "Выбери, что услышал", exArrange: "Переведи предложение", exMatch: "Найди пары", exMeaning: "Что это значит?",
+    promptHello: "Как сказать «{w}»?",
+    src: { hello: "Привет", sentence: "Меня зовут Симба.", pairs: ["Привет", "Спасибо", "Да", "Нет"], thanks: ["Спасибо", "Пожалуйста", "До свидания", "Извините"] },
+    praise: ["Отлично!", "Превосходно!", "Супер!", "Молодец!"], rightAnswer: "Правильный ответ:", next: "Далее", matchHint: "Сопоставь слова с переводом", keyHint: "Подсказка: работают клавиши 1–4 и Enter", doMatch: "Сопоставить", check: "Проверить",
+    quitLesson: "Выйти из урока", listenA: "Слушать", slowA: "Медленно",
+    lessonDone: "Урок пройден!", practiceDone: "Тренировка завершена!", perfect: "Без ошибок! +5 бонусных алмазов 🎉", mistakesAdded: "Ошибки добавлены в «Работу над ошибками».", accuracy: "Точность", time: "Время",
+    locked: "🔒 Сначала пройди предыдущий урок", noMistakes: "🎉 Ошибок для повторения нет. Пройди урок!", switched: "Курс: {lang}",
+    streakToast: "🔥 Серия: {n} дн.! {m}", streakDone: "Сегодня ты уже занимался.", streakTodo: "Не забудь позаниматься сегодня.", streakUp: "🔥 Серия: {n} дн.!",
+    refilled: "❤️ Жизни восстановлены!", premiumOn: "👑 Premium активен — безлимитные жизни!", owned: "📚 Курс добавлен в библиотеку", booked: "✅ Урок с {n} забронирован",
+    callNotes: "📝 Заметки урока: здесь появятся слова от преподавателя", rated: "🙏 Спасибо! Оценка сохранена.", reset: "Данные демо сброшены", quit: "Урок прерван — прогресс не сохранён",
+    noTts: "🔇 Браузер не поддерживает озвучку", uiChanged: "🌐 Язык интерфейса: русский",
+    chooseCourse: "Выбери курс", courseProg: "{p} / 5 уроков · Уровень 1", newLangs: "Новые языки открываются по мере добавления контента в Simba Studio.",
+    noHearts: "Жизни закончились 💔", heartsN: "Жизни ❤️ {n} / 5", heartsLead: "За ошибки отнимаются жизни. Они восстанавливаются каждые 4 часа.", heartsPrem: "👑 Безлимитные жизни с Premium", refill: "Восстановить · 💎 350", close: "Закрыть",
+    premLead: "Больше возможностей, быстрее прогресс!", feats: ["Безлимитные жизни", "Персональное повторение ошибок", "Авторские курсы в Premium", "1 бесплатный урок с преподавателем в месяц", "Без рекламы"],
+    yearly: "Годовой", monthly: "Месячный", save50: "Скидка 50%", perMonth: "/ мес", perYear: "/ год", cancelAny: "Отмена в любой момент", trial: "7 дней бесплатно", premAlready: "Premium уже активен",
+    prices: { m: "8 $", y: "48 $", ym: "4 $" }, premNote: "Демо — оплата не списывается. Способ оплаты зависит от страны: карта, местный платёжный сервис или код активации.",
+    code: "У меня есть код активации", codePh: "SIMBA-XXXX-XXXX", codeBtn: "Активировать", codeBad: "Неверный код. Пример: SIMBA-2026-TM01", codeOk: "🎟️ Код принят — Premium активен на 30 дней",
+    bookConfirm: "Забронировать · {p}", pickTime: "Выбери время", min: "{n} мин", today: "Сегодня", tomorrow: "Завтра", tzNote: "Время указано в твоём часовом поясе ({tz}).",
+    nKeep: "Сохрани серию!", nKeepDone: "Сегодняшний урок пройден, отлично!", nKeepTodo: "Сегодня ты ещё не занимался.", nLesson: "Урок с {n}", nLeague: "Ты поднимаешься в Золотой лиге", nLeagueSub: "До зоны повышения: {g} 💎", nCourse: "Новый курс: {t}", nCourseSub: "{by}: новый урок",
+    support: "Помощь и поддержка", supportLead: "Сообщение уйдёт в службу поддержки (панель Simba Admin).", supportHi: "Здравствуйте, {name} 👋 Это поддержка Simba. Чем можем помочь?", supportTeam: "Поддержка", msgPh: "Напиши сообщение…", send: "Отправить", supportReply: "Запрос принят (#{id}). Специалист ответит здесь в течение нескольких минут.",
+    settings: "Настройки", uiLang: "Язык интерфейса", sfx: "Звуковые эффекты", remind: "Напоминание о серии (20:00)", goal: "Цель на день", goals: ["5 мин · Легко", "10 мин · Нормально", "20 мин · Серьёзно"], resetBtn: "Сбросить данные демо",
+    stats: "Моя статистика", thisWeek: "На этой неделе: {n} мин", dayStreak: "Дней подряд", lessonsL: "Уроков",
+    rateQ: "Как прошёл урок с {n}?", rateLead: "Оценка появится в профиле преподавателя.",
+    courseMeta: "{by} · ⭐ {r} · уроков: {n} · Видео + упражнения", cfeats: ["Короткие видеоуроки", "Упражнение после каждого урока", "Значок за прохождение"], inLib: "В библиотеке ✓", startPrem: "Начать (Premium)", openPrem: "👑 Открыть с Premium", buy: "Купить · {p}", courseNote: "70% дохода получает автор. Демо — оплата не списывается.",
+    callMeta: "{lang} · урок 25 мин", connecting: "Подключение…", waiting: "Ждём преподавателя…", connected: "Подключено · HD", camOff: "Камера выключена", micA: "Микрофон", camA: "Камера", notesA: "Заметки", endA: "Завершить звонок",
+  },
+  tk: {
+    phTitle: "Simba · Okuwçy interfeýsiniň demosy", phSub: "Basyp bolýan prototip: maglumatlar mysal, töleg we wideo jaň simulýasiýa.",
+    mMobile: "📱 Mobil", mWeb: "🖥️ Web", arch: "Tehniki arhitektura (türkçe) →",
+    nav: { home: "Baş sahypa", lead: "Reýting", courses: "Sapaklar", teachers: "Mugallymlar", profile: "Profil" },
+    langNames: { en: "Iňlis dili", zh: "Hytaý dili", ru: "Rus dili", fr: "Fransuz dili" },
+    changeCourse: "Kursy çalyş", streak: "Yzygiderlik", gems: "Almaz", hearts: "Jan", notifs: "Bildirişler",
+    questsTitle: "Şu günüň tabşyryklary", q1: "1 sapak tamamla", q2: "5 dogry jogap", q3: "10 minut öwren", timeLeft: "{h} sag {m} min galdy",
+    premOn: "Premium işjeň", premOnSub: "Çäksiz jan açyk", premSub: "Has çalt öwren!", premGo: "Geç ›",
+    talk: "Hakyky mugallym bilen gürleş", online: "{n} mugallym onlaýn",
+    league: "Altyn liga", all: "Hemmesi ›", you: "Sen",
+    me: { name: "Merjen Annaýewa", first: "Merjen", country: "Türkmenistan", quote: "Her gün öňküden gowy! 🐾" },
+    welcome: "Hoş geldiň!", great: "Ösüşiň ajaýyp!", nextQ: "Indiki sapaga başlalymmy?", unitDone: "Bölümi tamamladyň, gaýtalamagyň wagty!", cont: "Dowam et ▶",
+    extra: "Goşmaça türgenleşik", extraSub: "Ýalňyş jümleleriňi gaýtala", practice: "Türgenleşikler", practiceSub: "Özüňi barla",
+    level: "1-nji dereje", beginner: "Başlangyç", tipFirst: "Ilkinji sapagyňa başla!", tipNext: "Indiki sapak!",
+    nodes: ["Salamlaşmak", "Diňlemek", "Gürleşmek", "Bölüm synagy", "Hekaýa"],
+    leadSub: "Dünýädäki beýleki okuwçylar bilen bäsleş! Ilkinji 5-lik Almaz liga geçýär.", weekEnds: "Hepdäniň soňuna: 3 g 4 sag", promo: "▲ Ýokarlanma zolagy",
+    speakers: "Türkmen dilinde gürleýänler üçin · A1", change: "Çalyş", official: "Resmi okuw maksatnamasy", team: "Simba topary", fromCreators: "Awtorlardan",
+    unit: "{n}-nji bölüm", units: [["Salamlaşmak", "Salam, hoş gal, sag boluň"], ["Tanyşmak", "At, ýaş, nireden"], ["Iýmit we içgi", "Sargyt etmek, tagamlar"], ["Syýahat", "Howa menzili, myhmanhana, ýol"], ["Söwda", "Baha soramak, söwdalaşmak"]],
+    nLessons: "{n} sapak", inLibrary: "Kitaphanaňda", inPremium: "👑 Premium-a girýär", creator: "Awtor", unitLocked: "🔒 Ilki 1-nji bölümi tamamla",
+    ctitles: { en: ["Iş iňlis dili: ýygnaklar", "Seriallar bilen iňlis dili", "IELTS Speaking taýýarlygy"], zh: ["HSK 1: çalt başlangyç", "Hytaý iýeroglif ýazuwy", "Syýahat üçin hytaý dili"], ru: ["Kiril elipbiýi 7 günde", "Rus dili grammatikasy: düşümler", "Gysga hekaýalar bilen okamak"], fr: ["Parižde ilkinji gün", "Fransuz dilinde aýdylyş", "DELF A2 taýýarlygy"] },
+    tAll: "Hemmesi", tFree: "🟢 Häzir boş", tMyLang: "💬 Türkmençe bilýänler", online1: "Onlaýn", offline: "Onlaýn däl", per25: "/ 25 min", calendar: "Senenama", callNow: "Häzir gürleş", upcoming: "Ýakyn sapaklaryň", confirmed: "Tassyklandy", speaks: "Gürleýär",
+    tags: { talk: "Gürleşik", biz: "Iş iňlis dili", ielts: "IELTS", pron: "Aýdylyş", begin: "Başlangyç", kids: "Çagalar", hsk: "HSK", tones: "Tonlar", chars: "Iýerogliflar", gram: "Grammatika", read: "Okamak", delf: "DELF", travel: "Syýahat", bizfr: "Iş fransuz dili" },
+    following: "Yzarlanýan", followers: "Yzarlaýjylar", friends: "Dostlar", achievements: "Üstünliklerim", seeAll: "Hemmesini gör ›",
+    mDays: "{n} gün", mStreak: "Yzygiderlik", mLessons: "{n} sapak", mDone: "Tamamlandy", mWeeks: "{n} hepde", mActive: "Işjeňlik", mAcc: "{n}%", mAccL: "Takyklyk",
+    menu: [["Premium-a geç", "Has köp mümkinçilik, has köp öwreniş"], ["Statistikam", "Öwreniş ösüşiňi gör"], ["Halaýan sapaklarym", "Iň halaýan sapaklaryň şu ýerde"], ["Sazlamalar", "Dil, bildirişler we başgalar"], ["Kömek we goldaw", "Soragyň barmy?"], ["Çykmak", "Hasabyňdan çyk"]],
+    noFavs: "⭐ Heniz halaýan sapagyň ýok", soon: "🏅 Ähli üstünlikler ýakyn wagtda", noLogout: "🙂 Demo tertibinde çykyp bolmaýar",
+    tagPractice: "🎯 Türgenleşik", tagExtra: "📘 Goşmaça türgenleşik",
+    exChoice: "Dogry terjimäni saýla", exListen: "Eşideniňi saýla", exArrange: "Bu jümläni terjime et", exMatch: "Jübütleri tap", exMeaning: "Bu näme diýmek?",
+    promptHello: "«{w}» nähili aýdylýar?",
+    src: { hello: "Salam", sentence: "Meniň adym Simba.", pairs: ["Salam", "Sag boluň", "Hawa", "Ýok"], thanks: ["Sag boluň", "Haýyş edýärin", "Hoş gal", "Bagyşlaň"] },
+    praise: ["Ajaýyp!", "Örän gowy!", "Super!", "Berekella!"], rightAnswer: "Dogry jogap:", next: "Dowam", matchHint: "Sözleri manylary bilen jübütle", keyHint: "Maslahat: 1–4 we Enter düwmeleri işleýär", doMatch: "Jübütle", check: "Barla",
+    quitLesson: "Sapakdan çyk", listenA: "Diňle", slowA: "Haýal diňle",
+    lessonDone: "Sapak tamamlandy!", practiceDone: "Türgenleşik tamamlandy!", perfect: "Ýalňyşsyz! +5 bonus almaz 🎉", mistakesAdded: "Ýalňyşlaryň Goşmaça türgenleşige goşuldy.", accuracy: "Takyklyk", time: "Wagt",
+    locked: "🔒 Ilki öňki sapagy tamamla", noMistakes: "🎉 Gaýtalamaly ýalňyşyň ýok. Bir sapak geç!", switched: "{lang} kursuna geçdiň",
+    streakToast: "🔥 {n} günlük yzygiderlik! {m}", streakDone: "Şu günüň sapagyny etdiň.", streakTodo: "Şu gün bir sapak etmegi ýatdan çykarma.", streakUp: "🔥 Yzygiderligiň {n} gün boldy!",
+    refilled: "❤️ Janlaryň doldy!", premiumOn: "👑 Premium işjeň — çäksiz jan!", owned: "📚 Kurs kitaphanaňa goşuldy", booked: "✅ {n} bilen sapak bellenildi",
+    callNotes: "📝 Sapak bellikleri: mugallymyň ýazan sözleri şu ýerde görüner", rated: "🙏 Sag bol! Bahaň ýazyldy.", reset: "Demo maglumatlary arassalandy", quit: "Sapak ýarym galdy — ösüş ýazylmady",
+    noTts: "🔇 Brauzeriň sesli okamagy goldamaýar", uiChanged: "🌐 Interfeýs dili: türkmen dili",
+    chooseCourse: "Kurs saýla", courseProg: "{p} / 5 sapak · 1-nji dereje", newLangs: "Täze diller Simba Studio-da mazmun goşulanda açylýar.",
+    noHearts: "Janyň gutardy 💔", heartsN: "Janlaryň ❤️ {n} / 5", heartsLead: "Ýalňyş jogaplar jan aýyrýar. Janlar her 4 sagatda dikelýär.", heartsPrem: "👑 Premium bilen çäksiz jan", refill: "Janlary doldur · 💎 350", close: "Ýap",
+    premLead: "Has köp mümkinçilik, has çalt ösüş!", feats: ["Çäksiz jan", "Şahsy ýalňyş gaýtalamasy", "Premium-a girýän awtor kurslary", "Her aý 1 mugt mugallym sapagy", "Mahabatsyz"],
+    yearly: "Ýyllyk", monthly: "Aýlyk", save50: "50% arzanladyş", perMonth: "/ aý", perYear: "/ ýyl", cancelAny: "Islän wagtyň ýatyr", trial: "7 gün mugt synap gör", premAlready: "Premium eýýäm işjeň",
+    prices: { m: "39 TMT", y: "229 TMT", ym: "19 TMT" }, premNote: "Demo — töleg alynmaýar. Türkmenistanda aktiwasiýa kody ýa-da ýerli töleg hyzmaty arkaly.",
+    code: "Aktiwasiýa kodum bar", codePh: "SIMBA-XXXX-XXXX", codeBtn: "Işjeňleşdir", codeBad: "Kod nädogry. Mysal: SIMBA-2026-TM01", codeOk: "🎟️ Kod kabul edildi — Premium 30 gün işjeň",
+    bookConfirm: "Sapagy belle · {p}", pickTime: "Wagt saýla", min: "{n} min", today: "Şu gün", tomorrow: "Ertir", tzNote: "Wagtlar seniň sagat guşagyňda görkezilýär ({tz}).",
+    nKeep: "Yzygiderligiňi sakla!", nKeepDone: "Şu günki sapagyňy etdiň, ajaýyp!", nKeepTodo: "Şu gün entek sapak etmediň.", nLesson: "{n} bilen sapagyň bar", nLeague: "Altyn ligada ýokarlanýarsyň", nLeagueSub: "Ýokarlanma zolagyna {g} 💎 galdy", nCourse: "Täze kurs: {t}", nCourseSub: "{by} täze sapak goşdy",
+    support: "Kömek we goldaw", supportLead: "Hatyň Simba Admin panelindäki goldaw toparyna iberilýär.", supportHi: "Salam {name} 👋 Simba goldaw gullugyna hoş geldiň. Saňa nähili kömek edip bileris?", supportTeam: "Goldaw topary", msgPh: "Hatyňy ýaz…", send: "Iber", supportReply: "Ýüzlenmäň kabul edildi (#{id}). Goldaw hünärmeni birnäçe minudyň dowamynda şu ýerde jogap berer.",
+    settings: "Sazlamalar", uiLang: "Interfeýs dili", sfx: "Ses effektleri", remind: "Ýatlatma (20:00)", goal: "Gündelik maksat", goals: ["5 min · Ýeňil", "10 min · Adaty", "20 min · Çynlakaý"], resetBtn: "Demo maglumatlaryny arassala",
+    stats: "Statistikam", thisWeek: "Şu hepde · {n} minut", dayStreak: "Gün yzygiderlik", lessonsL: "Sapak",
+    rateQ: "{n} bilen sapak nähili geçdi?", rateLead: "Bahaň mugallymyň profilinde görüner.",
+    courseMeta: "{by} · ⭐ {r} · {n} sapak · Wideo + türgenleşik", cfeats: ["Gysga wideo sapaklar", "Her sapagyň soňunda türgenleşik", "Tamamlama nyşany"], inLib: "Kitaphanaňda ✓", startPrem: "Başla (Premium)", openPrem: "👑 Premium bilen aç", buy: "Satyn al · {p}", courseNote: "Girdejiniň 70%-i awtora gidýär. Demo — töleg alynmaýar.",
+    callMeta: "{lang} · 25 min sapak", connecting: "Birikdirilýär…", waiting: "Mugallyma garaşylýar…", connected: "Birikdi · HD", camOff: "Kamera öçük", micA: "Mikrofon", camA: "Kamera", notesA: "Bellikler", endA: "Jaňy tamamla",
+  },
+};
+function t(key, vars) {
+  let s = I18N[S.ui][key];
+  if (s === undefined) s = I18N.tr[key];
+  if (typeof s !== "string") return s;
+  return vars ? s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : "")) : s;
+}
+// Fiyatlar örnektir; temel değer TL, gösterim bölgeye göre.
+const money = (tryVal) => S.ui === "tr" ? `₺${tryVal}` : S.ui === "tk" ? `${Math.max(5, Math.round(tryVal / 10))} TMT` : `${Math.max(3, Math.round(tryVal / 30))} $`;
+
 /* ================= data ================= */
 const LANGS = {
-  en: { name: "İngilizce", flag: "gb", tts: "en-US", marks: ["🗽", "🎡"],
+  en: { flag: "gb", tts: "en-US", marks: ["🗽", "🎡"],
     greet: [["Hello"], ["Goodbye"], ["Thank you"], ["Please"]],
     listen: [["Good morning"], ["Good night"], ["Good evening"], ["Good luck"]],
     sent: ["My", "name", "is", "Simba"], distract: ["are", "you"], joiner: " ",
-    pairs: [["Hello", "Merhaba"], ["Thank you", "Teşekkürler"], ["Yes", "Evet"], ["No", "Hayır"]],
-    thanks: ["Thank you"], sub: {} },
-  zh: { name: "Çince", flag: "cn", tts: "zh-CN", marks: ["🏯", "🐉"],
+    pairs: ["Hello", "Thank you", "Yes", "No"], thanks: ["Thank you"], sub: {} },
+  zh: { flag: "cn", tts: "zh-CN", marks: ["🏯", "🐉"],
     greet: [["你好", "nǐ hǎo"], ["再见", "zàijiàn"], ["谢谢", "xièxie"], ["请", "qǐng"]],
     listen: [["早上好", "zǎoshang hǎo"], ["晚安", "wǎn'ān"], ["晚上好", "wǎnshang hǎo"], ["你好", "nǐ hǎo"]],
     sent: ["我", "叫", "Simba"], distract: ["你", "是"], joiner: "",
-    pairs: [["你好", "Merhaba"], ["谢谢", "Teşekkürler"], ["是", "Evet"], ["不", "Hayır"]],
-    thanks: ["谢谢", "xièxie"], sub: { "我": "wǒ", "叫": "jiào", "你": "nǐ", "是": "shì", "不": "bù", "你好": "nǐ hǎo", "谢谢": "xièxie" } },
-  ru: { name: "Rusça", flag: "ru", tts: "ru-RU", marks: ["🪆", "❄️"],
+    pairs: ["你好", "谢谢", "是", "不"], thanks: ["谢谢", "xièxie"],
+    sub: { "我": "wǒ", "叫": "jiào", "你": "nǐ", "是": "shì", "不": "bù", "你好": "nǐ hǎo", "谢谢": "xièxie" } },
+  ru: { flag: "ru", tts: "ru-RU", marks: ["🪆", "❄️"],
     greet: [["Привет", "privet"], ["До свидания", "do svidaniya"], ["Спасибо", "spasibo"], ["Пожалуйста", "pozhaluysta"]],
     listen: [["Доброе утро", "dobroye utro"], ["Спокойной ночи", "spokoynoy nochi"], ["Добрый вечер", "dobryy vecher"], ["Добрый день", "dobryy den'"]],
     sent: ["Меня", "зовут", "Симба"], distract: ["Я", "ты"], joiner: " ",
-    pairs: [["Привет", "Merhaba"], ["Спасибо", "Teşekkürler"], ["Да", "Evet"], ["Нет", "Hayır"]],
-    thanks: ["Спасибо", "spasibo"], sub: { "Меня": "menya", "зовут": "zovut", "Симба": "Simba", "Я": "ya", "ты": "ty" } },
-  fr: { name: "Fransızca", flag: "fr", tts: "fr-FR", marks: ["🗼", "🥐"],
+    pairs: ["Привет", "Спасибо", "Да", "Нет"], thanks: ["Спасибо", "spasibo"],
+    sub: { "Меня": "menya", "зовут": "zovut", "Симба": "Simba", "Я": "ya", "ты": "ty" } },
+  fr: { flag: "fr", tts: "fr-FR", marks: ["🗼", "🥐"],
     greet: [["Bonjour"], ["Au revoir"], ["Merci"], ["S'il vous plaît"]],
     listen: [["Bonne nuit"], ["Bonsoir"], ["Bonjour"], ["Bon appétit"]],
     sent: ["Je", "m'appelle", "Simba"], distract: ["suis", "tu"], joiner: " ",
-    pairs: [["Bonjour", "Merhaba"], ["Merci", "Teşekkürler"], ["Oui", "Evet"], ["Non", "Hayır"]],
-    thanks: ["Merci"], sub: {} },
+    pairs: ["Bonjour", "Merci", "Oui", "Non"], thanks: ["Merci"], sub: {} },
 };
-const NODES = [
-  { icon: "📖", label: "Selamlaşma" },
-  { icon: "🎧", label: "Dinleme" },
-  { icon: "💬", label: "Konuşma" },
-  { icon: "🏆", label: "Ünite sınavı" },
-  { icon: "🎬", label: "Hikâye" },
-];
-const UNITS = [
-  { icon: "👋", t: "Selamlaşma", d: "Merhaba, hoşça kal, teşekkürler" },
-  { icon: "🙋", t: "Tanışma", d: "İsim, yaş, memleket" },
-  { icon: "🍜", t: "Yemek & İçecek", d: "Sipariş vermek, tatlar" },
-  { icon: "✈️", t: "Seyahat", d: "Havalimanı, otel, yol tarifi" },
-  { icon: "🛍️", t: "Alışveriş", d: "Fiyat sormak, pazarlık" },
-];
+const NODE_ICONS = ["📖", "🎧", "💬", "🏆", "🎬"];
+const UNIT_ICONS = ["👋", "🙋", "🍜", "✈️", "🛍️"];
 const CREATOR = {
   en: [
-    { e: "💼", t: "İş İngilizcesi: Toplantılar", by: "Ayşe K.", r: 4.9, n: 24, price: 149, bg: "#e6eeff" },
-    { e: "🎬", t: "Dizilerle İngilizce", by: "Can Ö.", r: 4.8, n: 40, prem: true, bg: "#ffe9da" },
-    { e: "🎤", t: "IELTS Speaking Hazırlık", by: "Elif D.", r: 4.7, n: 18, price: 249, bg: "#dcf6ea" },
+    { e: "💼", by: "Ayşe K.", r: 4.9, n: 24, price: 149, bg: "#e6eeff" },
+    { e: "🎬", by: "Serdar N.", r: 4.8, n: 40, prem: true, bg: "#ffe9da" },
+    { e: "🎤", by: "Elif D.", r: 4.7, n: 18, price: 249, bg: "#dcf6ea" },
   ],
   zh: [
-    { e: "📗", t: "HSK 1 Hızlı Başlangıç", by: "Mei L.", r: 4.9, n: 30, prem: true, bg: "#dcf6ea" },
-    { e: "✍️", t: "Çince Karakter Yazımı", by: "Burak T.", r: 4.8, n: 22, price: 129, bg: "#ffe3ee" },
-    { e: "🧳", t: "Seyahat Çincesi", by: "Selin A.", r: 4.6, n: 15, price: 99, bg: "#e6eeff" },
+    { e: "📗", by: "Mei L.", r: 4.9, n: 30, prem: true, bg: "#dcf6ea" },
+    { e: "✍️", by: "Jeren A.", r: 4.8, n: 22, price: 129, bg: "#ffe3ee" },
+    { e: "🧳", by: "Selin A.", r: 4.6, n: 15, price: 99, bg: "#e6eeff" },
   ],
   ru: [
-    { e: "🔤", t: "Kiril Alfabesi 7 Günde", by: "Murat Y.", r: 4.9, n: 14, prem: true, bg: "#e6eeff" },
-    { e: "📐", t: "Rusça Dilbilgisi: Hâller", by: "Olga S.", r: 4.8, n: 32, price: 179, bg: "#eee8ff" },
-    { e: "📚", t: "Kısa Öykülerle Okuma", by: "Deniz B.", r: 4.7, n: 20, price: 119, bg: "#fff4d0" },
+    { e: "🔤", by: "Maral B.", r: 4.9, n: 14, prem: true, bg: "#e6eeff" },
+    { e: "📐", by: "Olga S.", r: 4.8, n: 32, price: 179, bg: "#eee8ff" },
+    { e: "📚", by: "Deniz B.", r: 4.7, n: 20, price: 119, bg: "#fff4d0" },
   ],
   fr: [
-    { e: "🥐", t: "Paris'te İlk Gün", by: "Zeynep E.", r: 4.9, n: 16, prem: true, bg: "#fff4d0" },
-    { e: "🎧", t: "Fransızca Telaffuz Atölyesi", by: "Camille D.", r: 4.8, n: 21, price: 139, bg: "#e6eeff" },
-    { e: "📝", t: "DELF A2 Hazırlık", by: "Kerem Ç.", r: 4.7, n: 28, price: 229, bg: "#dcf6ea" },
+    { e: "🥐", by: "Zeynep E.", r: 4.9, n: 16, prem: true, bg: "#fff4d0" },
+    { e: "🎧", by: "Camille D.", r: 4.8, n: 21, price: 139, bg: "#e6eeff" },
+    { e: "📝", by: "Kerem Ç.", r: 4.7, n: 28, price: 229, bg: "#dcf6ea" },
   ],
 };
+// speaks: öğretmenin konuştuğu diller (yeni başlayanlar ana dilini bilen öğretmen arar)
 const TEACHERS = {
   en: [
-    { n: "Emily R.", f: "us", on: true, r: 4.9, l: 1240, p: 180, c: "#ff8a7a", tags: ["Konuşma", "İş İngilizcesi"], line: "Hi! Ready to practice some small talk?" },
-    { n: "James T.", f: "gb", on: true, r: 4.8, l: 860, p: 160, c: "#5b8bff", tags: ["IELTS", "Telaffuz"], line: "Let's start with your weekend plans." },
-    { n: "Grace M.", f: "ca", on: false, r: 5.0, l: 310, p: 200, c: "#a07bff", tags: ["Başlangıç", "Çocuklar"], line: "Hello! How are you today?" },
+    { n: "Aýna M.", f: "tm", on: true, r: 4.9, l: 640, p: 120, c: "#1fb873", speaks: ["tk", "ru", "en"], tags: ["begin", "talk"], line: "Salam! Let's start in English, slowly." },
+    { n: "Emily R.", f: "us", on: true, r: 4.9, l: 1240, p: 180, c: "#ff8a7a", speaks: ["en"], tags: ["talk", "biz"], line: "Hi! Ready to practice some small talk?" },
+    { n: "James T.", f: "gb", on: true, r: 4.8, l: 860, p: 160, c: "#5b8bff", speaks: ["en", "ru"], tags: ["ielts", "pron"], line: "Let's start with your weekend plans." },
+    { n: "Grace M.", f: "ca", on: false, r: 5.0, l: 310, p: 200, c: "#a07bff", speaks: ["en", "tr"], tags: ["begin", "kids"], line: "Hello! How are you today?" },
   ],
   zh: [
-    { n: "Li Wei", f: "cn", on: true, r: 4.9, l: 980, p: 190, c: "#ef5a5a", tags: ["HSK", "Tonlar"], line: "你好！我们开始吧。" },
-    { n: "Chen Mei", f: "cn", on: false, r: 4.8, l: 540, p: 170, c: "#ffae3c", tags: ["Konuşma", "Karakterler"], line: "你今天好吗？" },
+    { n: "Li Wei", f: "cn", on: true, r: 4.9, l: 980, p: 190, c: "#ef5a5a", speaks: ["zh", "en", "ru"], tags: ["hsk", "tones"], line: "你好！我们开始吧。" },
+    { n: "Jeren A.", f: "tm", on: true, r: 4.8, l: 350, p: 130, c: "#1fb873", speaks: ["tk", "ru", "zh"], tags: ["begin", "chars"], line: "你好！Salam!" },
+    { n: "Chen Mei", f: "cn", on: false, r: 4.8, l: 540, p: 170, c: "#ffae3c", speaks: ["zh", "en", "tr"], tags: ["talk", "chars"], line: "你今天好吗？" },
   ],
   ru: [
-    { n: "Anna V.", f: "ru", on: true, r: 4.9, l: 720, p: 170, c: "#3cb8a0", tags: ["Konuşma", "Dilbilgisi"], line: "Привет! Как дела?" },
-    { n: "Dmitri K.", f: "ru", on: false, r: 4.7, l: 410, p: 150, c: "#5b8bff", tags: ["Başlangıç", "Okuma"], line: "Начнём урок!" },
+    { n: "Merdan B.", f: "tm", on: true, r: 4.9, l: 820, p: 110, c: "#1fb873", speaks: ["tk", "ru"], tags: ["begin", "gram"], line: "Привет! Начнём с алфавита." },
+    { n: "Anna V.", f: "ru", on: true, r: 4.9, l: 720, p: 170, c: "#3cb8a0", speaks: ["ru", "en"], tags: ["talk", "gram"], line: "Привет! Как дела?" },
+    { n: "Dmitri K.", f: "ru", on: false, r: 4.7, l: 410, p: 150, c: "#5b8bff", speaks: ["ru", "tr"], tags: ["begin", "read"], line: "Начнём урок!" },
   ],
   fr: [
-    { n: "Camille D.", f: "fr", on: true, r: 4.9, l: 860, p: 185, c: "#ff7aa8", tags: ["Telaffuz", "DELF"], line: "Bonjour ! Comment ça va ?" },
-    { n: "Lucas B.", f: "fr", on: true, r: 4.8, l: 390, p: 165, c: "#5b8bff", tags: ["Konuşma", "Seyahat"], line: "On commence ?" },
-    { n: "Chloé M.", f: "ca", on: false, r: 4.9, l: 260, p: 175, c: "#a07bff", tags: ["İş Fransızcası"], line: "Salut !" },
+    { n: "Camille D.", f: "fr", on: true, r: 4.9, l: 860, p: 185, c: "#ff7aa8", speaks: ["fr", "en"], tags: ["pron", "delf"], line: "Bonjour ! Comment ça va ?" },
+    { n: "Lucas B.", f: "fr", on: true, r: 4.8, l: 390, p: 165, c: "#5b8bff", speaks: ["fr", "ru"], tags: ["talk", "travel"], line: "On commence ?" },
+    { n: "Chloé M.", f: "ca", on: false, r: 4.9, l: 260, p: 175, c: "#a07bff", speaks: ["fr", "en", "tr"], tags: ["bizfr"], line: "Salut !" },
   ],
 };
 const LEAGUE = [
   { n: "SimbaKing", a: "🦁", g: 12450 }, { n: "Dreamer", a: "🐼", g: 10320 }, { n: "Linguist", a: "🐱", g: 9870 },
-  { n: "PolyglotAy", a: "🦊", g: 8420 }, { n: "Kelimeci", a: "🐨", g: 7210 }, { n: "BonjourBoy", a: "🐸", g: 5980 },
+  { n: "AshgabatAy", a: "🦊", g: 8420 }, { n: "Kelimeci", a: "🐨", g: 7210 }, { n: "BonjourBoy", a: "🐸", g: 5980 },
   { n: "Matryoshka", a: "🐻", g: 4630 }, { n: "NiHao_99", a: "🐯", g: 3540 }, { n: "WordNinja", a: "🐵", g: 2890 },
   { n: "Kitapkurdu", a: "🐰", g: 1720 }, { n: "Sabahçı", a: "🐧", g: 1210 },
 ];
 const TABS = [
-  { id: "home", label: "Ana Sayfa", icon: "i-home" },
-  { id: "lead", label: "Liderlik", icon: "i-lead" },
-  { id: "courses", label: "Dersler", icon: "i-book" },
-  { id: "teachers", label: "Öğretmenler", icon: "i-video" },
-  { id: "profile", label: "Profil", icon: "i-user" },
+  { id: "home", icon: "i-home" }, { id: "lead", icon: "i-lead" }, { id: "courses", icon: "i-book" },
+  { id: "teachers", icon: "i-video" }, { id: "profile", icon: "i-user" },
 ];
 
 /* ================= state ================= */
+function detectUi() {
+  try { const l = (navigator.language || "").toLowerCase(); if (l.startsWith("ru")) return "ru"; if (l.startsWith("tk")) return "tk"; if (l.startsWith("tr")) return "tr"; } catch (e) {}
+  return "tk";
+}
 const DEFAULT = {
-  lang: "en", tab: "home", streak: 15, gems: 4730, hearts: 5, weekly: 2450, premium: false, doneToday: false,
+  ui: detectUi(), lang: "en", tab: "home", streak: 15, gems: 4730, hearts: 5, weekly: 2450, premium: false, doneToday: false,
   progress: { en: 0, zh: 0, ru: 0, fr: 0 }, mistakes: { en: [], zh: [], ru: [], fr: [] },
   quests: { lessons: 0, correct: 0, minutes: 0 }, booked: [], owned: [],
 };
 let S = JSON.parse(JSON.stringify(DEFAULT));
 try { const saved = JSON.parse(localStorage.getItem("simba-demo") || "null"); if (saved) S = Object.assign(S, saved); } catch (e) {}
+if (!LOCALES[S.ui]) S.ui = DEFAULT.ui;
+S.booked = (S.booked || []).filter((b) => b && b.ti !== undefined);
 function save() { try { localStorage.setItem("simba-demo", JSON.stringify(S)); } catch (e) {} }
 
 /* ================= helpers ================= */
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const fmt = (n) => n.toLocaleString("tr-TR");
+const loc = () => LOCALES[S.ui].tag;
+// tk için Intl desteği yok; Türkmence de binlikleri boşlukla ayırır (ru biçimi)
+const fmt = (n) => { try { return n.toLocaleString(S.ui === "tk" ? "ru-RU" : loc()); } catch (e) { return String(n); } };
 const L = () => LANGS[S.lang];
+const langName = (k) => t("langNames")[k];
+// Rusça arayüzde Rusça kursu anlamsız olduğu için gizlenir
+const targets = () => Object.keys(LANGS).filter((k) => !(S.ui === "ru" && k === "ru"));
+const icon = (id) => `<svg aria-hidden="true"><use href="#${id}"/></svg>`;
+const lionSvg = (id = "lion", cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+const initials = (n) => n.split(" ").map((p) => p[0]).join("").slice(0, 2);
+const avatar = (tc, cls = "") => `<div class="av ${cls}" style="background:${tc.c}">${esc(initials(tc.n))}${tc.on ? '<span class="on"></span>' : ""}</div>`;
 // Emoji bayraklar Windows'ta görünmediği için basit SVG bayraklar
 const star = (cx, cy, R) => Array.from({ length: 10 }, (_, i) => { const r = i % 2 ? R * 0.4 : R, a = Math.PI / 5 * i - Math.PI / 2; return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`; }).join(" ");
 const FLAGS = {
@@ -647,20 +841,18 @@ const FLAGS = {
   ru: `<rect width="30" height="20" fill="#fff"/><rect y="6.67" width="30" height="6.67" fill="#0039a6"/><rect y="13.33" width="30" height="6.67" fill="#d52b1e"/>`,
   fr: `<rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#002395"/><rect x="20" width="10" height="20" fill="#ed2939"/>`,
   tr: `<rect width="30" height="20" fill="#e30a17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.3" cy="10" r="4" fill="#e30a17"/><polygon points="${star(18, 10, 2.4)}" fill="#fff" transform="rotate(-18 18 10)"/>`,
+  tm: `<rect width="30" height="20" fill="#00843d"/><rect x="3.5" width="5.5" height="20" fill="#d22630"/>${[2.5, 7.5, 12.5, 17.5].map((y) => `<circle cx="6.25" cy="${y}" r="1.4" fill="#ffbd2e"/>`).join("")}<circle cx="14.5" cy="6" r="3.2" fill="#fff"/><circle cx="15.8" cy="5.4" r="3" fill="#00843d"/>${[[18.5, 3], [20.5, 5], [18.5, 7], [20.5, 9], [18.5, 11]].map(([x, y]) => `<polygon points="${star(x, y, 0.9)}" fill="#fff"/>`).join("")}`,
 };
 const flag = (c, h = 15) => `<svg class="flg" viewBox="0 0 30 20" width="${h * 1.5}" height="${h}" aria-hidden="true">${FLAGS[c] || ""}</svg>`;
-const icon = (id) => `<svg aria-hidden="true"><use href="#${id}"/></svg>`;
-const lionSvg = (id = "lion", cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
-const initials = (n) => n.split(" ").map((p) => p[0]).join("").slice(0, 2);
-const avatar = (t, cls = "") => `<div class="av ${cls}" style="background:${t.c}">${esc(initials(t.n))}${t.on ? '<span class="on"></span>' : ""}</div>`;
+const SPEAK_CODES = { tk: "TM", ru: "RU", tr: "TR", en: "EN", zh: "ZH", fr: "FR" };
 
 let toastT;
 function toast(msg) {
-  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600);
+  const el = $("#toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 2600);
 }
 function speak(text, rate = 1) {
-  if (!("speechSynthesis" in window)) { toast("🔇 Tarayıcın sesli okumayı desteklemiyor"); return; }
+  if (!("speechSynthesis" in window)) { toast(t("noTts")); return; }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = L().tts; u.rate = rate;
   const v = speechSynthesis.getVoices().find((v) => v.lang && v.lang.toLowerCase().startsWith(L().tts.slice(0, 2)));
@@ -670,48 +862,82 @@ function speak(text, rate = 1) {
 function timeLeft() {
   const now = new Date(), end = new Date(now); end.setHours(24, 0, 0, 0);
   const m = Math.floor((end - now) / 60000);
-  return `${Math.floor(m / 60)}s ${m % 60}dk kaldı`;
+  return t("timeLeft", { h: Math.floor(m / 60), m: m % 60 });
 }
 function myRankList() {
-  return [...LEAGUE, { n: "Deniz (Sen)", a: "🦁", g: S.weekly, me: true }].sort((a, b) => b.g - a.g);
+  return [...LEAGUE, { n: `${t("me").first} (${t("you")})`, a: "🦁", g: S.weekly, me: true }].sort((a, b) => b.g - a.g);
+}
+// Tarayıcıların çoğunda Türkmence (tk) Intl verisi yok; gün/ay adları elle verilir
+const TK_DAYS = ["Ýekşenbe", "Duşenbe", "Sişenbe", "Çarşenbe", "Penşenbe", "Anna", "Şenbe"];
+const TK_MONTHS = ["ýanwar", "fewral", "mart", "aprel", "maý", "iýun", "iýul", "awgust", "sentýabr", "oktýabr", "noýabr", "dekabr"];
+function weekdayShort(d) {
+  if (S.ui === "tk") return TK_DAYS[d.getDay()].slice(0, 3);
+  try { return d.toLocaleDateString(loc(), { weekday: "short" }); } catch (e) { return d.toDateString().slice(0, 3); }
+}
+function dateLong(d) {
+  if (S.ui === "tk") return `${d.getDate()} ${TK_MONTHS[d.getMonth()]}, ${TK_DAYS[d.getDay()]}`;
+  try { return d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return d.toDateString(); }
+}
+function dayLabel(off) {
+  if (off === 0) return t("today");
+  if (off === 1) return t("tomorrow");
+  const d = new Date(); d.setDate(d.getDate() + off);
+  return weekdayShort(d);
+}
+function bookingWhen(b) {
+  const d = new Date(b.date);
+  const off = Math.round((new Date(d.toDateString()) - new Date(new Date().toDateString())) / 864e5);
+  const label = off === 0 ? t("today") : off === 1 ? t("tomorrow") : dateLong(d);
+  return `${label} · ${b.slot}`;
 }
 
 /* ================= shell ================= */
+function renderChrome() {
+  document.documentElement.lang = S.ui;
+  document.title = t("phTitle");
+  $("#ph-title").textContent = t("phTitle");
+  $("#ph-sub").textContent = t("phSub");
+  $("#m-mobile").textContent = t("mMobile");
+  $("#m-web").textContent = t("mWeb");
+  $("#ph-arch").textContent = t("arch");
+  document.querySelectorAll("#ui-seg button").forEach((b) => b.classList.toggle("on", b.dataset.ui === S.ui));
+}
 function renderTop() {
-  const titles = { home: "Ana Sayfa", lead: "Liderlik", courses: "Dersler", teachers: "Öğretmenler", profile: "Profil" };
   $("#topbar").innerHTML = `
-    <div class="logo"><button class="logo-btn" data-act="langSheet" title="Kursu değiştir">${lionSvg()}${flag(L().flag, 13)}</button><span>Simba</span></div>
-    <div class="page-title">${titles[S.tab]}</div>
+    <div class="logo"><button class="logo-btn" data-act="langSheet" title="${esc(t("changeCourse"))}">${lionSvg()}${flag(L().flag, 13)}</button><span>Simba</span></div>
+    <div class="page-title">${t("nav")[S.tab]}</div>
     <div class="tb-r">
       <div class="pill">
-        <button class="it flag" data-act="langSheet" title="Kursu değiştir">${flag(L().flag)}</button>
-        <button class="it" data-act="streakInfo" title="Seri">🔥 ${S.streak}</button>
-        <button class="it" data-act="tab" data-arg="lead" title="Elmas">💎 ${fmt(S.gems)}</button>
-        <button class="it" data-act="heartsSheet" title="Can">❤️ ${S.premium ? "∞" : S.hearts}</button>
+        <button class="it flag" data-act="langSheet" title="${esc(t("changeCourse"))}">${flag(L().flag)}</button>
+        <button class="it" data-act="streakInfo" title="${esc(t("streak"))}">🔥 ${S.streak}</button>
+        <button class="it" data-act="tab" data-arg="lead" title="${esc(t("gems"))}">💎 ${fmt(S.gems)}</button>
+        <button class="it" data-act="heartsSheet" title="${esc(t("hearts"))}">❤️ ${S.premium ? "∞" : S.hearts}</button>
       </div>
-      <button class="bell" data-act="notifs" aria-label="Bildirimler">${icon("i-bell")}<span class="dot"></span></button>
+      <button class="bell" data-act="notifs" aria-label="${esc(t("notifs"))}">${icon("i-bell")}<span class="dot"></span></button>
     </div>`;
 }
 function renderNav() {
-  $("#tabbar").innerHTML = TABS.map((t) => `<button class="tab ${S.tab === t.id ? "on" : ""}" data-act="tab" data-arg="${t.id}">${icon(t.icon)}${t.label}</button>`).join("");
+  const nav = t("nav");
+  $("#tabbar").innerHTML = TABS.map((x) => `<button class="tab ${S.tab === x.id ? "on" : ""}" data-act="tab" data-arg="${x.id}">${icon(x.icon)}${nav[x.id]}</button>`).join("");
   $("#side").innerHTML = `<div class="logo">${lionSvg()}<span>Simba</span></div>` +
-    TABS.map((t) => `<button class="navi ${S.tab === t.id ? "on" : ""}" data-act="tab" data-arg="${t.id}">${icon(t.icon)}${t.label}</button>`).join("") +
+    TABS.map((x) => `<button class="navi ${S.tab === x.id ? "on" : ""}" data-act="tab" data-arg="${x.id}">${icon(x.icon)}${nav[x.id]}</button>`).join("") +
     `<div class="spacer"></div>${premBanner()}`;
 }
 function renderRail() {
   const top = myRankList();
   const meIdx = top.findIndex((p) => p.me);
+  const row = (p, i) => `<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 1}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`;
   $("#rail").innerHTML = `
     <div class="card" style="padding:16px">
-      <div class="sec-h"><h3>🏆 Altın Lig</h3><button class="link" data-act="tab" data-arg="lead">Tümü ›</button></div>
-      ${top.slice(0, 3).map((p, i) => `<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 1}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`).join("")}
-      ${meIdx > 2 ? `<div class="lr me"><span class="r">${meIdx + 1}</span><span class="a">🦁</span><span class="n">Deniz (Sen)</span><span class="g">${fmt(S.weekly)} 💎</span></div>` : ""}
+      <div class="sec-h"><h3>🏆 ${t("league")}</h3><button class="link" data-act="tab" data-arg="lead">${t("all")}</button></div>
+      ${top.slice(0, 3).map(row).join("")}
+      ${meIdx > 2 ? row(top[meIdx], meIdx) : ""}
     </div>
     ${questsCard()}
     ${teacherPromo()}`;
 }
 function render() {
-  renderTop(); renderNav(); renderRail();
+  renderChrome(); renderTop(); renderNav(); renderRail();
   const views = { home: viewHome, lead: viewLead, courses: viewCourses, teachers: viewTeachers, profile: viewProfile };
   $("#main").innerHTML = `<div class="main-inner">${views[S.tab]()}</div>`;
 }
@@ -720,57 +946,57 @@ function render() {
 function questsCard() {
   const q = S.quests;
   const items = [
-    { ic: "▶️", t: "1 ders tamamla", v: Math.min(q.lessons, 1), max: 1 },
-    { ic: "⭐", t: "5 doğru cevap", v: Math.min(q.correct, 5), max: 5 },
-    { ic: "🔥", t: "10 dakika çalış", v: Math.min(q.minutes, 10), max: 10 },
+    { ic: "▶️", tx: t("q1"), v: Math.min(q.lessons, 1), max: 1 },
+    { ic: "⭐", tx: t("q2"), v: Math.min(q.correct, 5), max: 5 },
+    { ic: "🔥", tx: t("q3"), v: Math.min(q.minutes, 10), max: 10 },
   ];
   return `<div class="card quests">
-    <div class="sec-h"><h3>📅 Bugünün Görevleri</h3><span class="timer" data-timer>⏱ ${timeLeft()}</span></div>
-    <div class="qrow">${items.map((i) => `<div class="q ${i.v >= i.max ? "ok" : ""}"><div class="ic">${i.ic}</div>${i.t}<span class="n">${i.v} / ${i.max}</span></div>`).join("")}</div>
+    <div class="sec-h"><h3>📅 ${t("questsTitle")}</h3><span class="timer" data-timer>⏱ ${timeLeft()}</span></div>
+    <div class="qrow">${items.map((i) => `<div class="q ${i.v >= i.max ? "ok" : ""}"><div class="ic">${i.ic}</div>${i.tx}<span class="n">${i.v} / ${i.max}</span></div>`).join("")}</div>
   </div>`;
 }
 function premBanner() {
   return S.premium
-    ? `<button class="prem on" data-act="premium"><span class="em">👑</span><span><b>Premium aktif</b><small>Sınırsız can açık</small></span></button>`
-    : `<button class="prem" data-act="premium"><span class="em">👑</span><span><b>Simba Premium</b><small>Daha hızlı ilerle!</small></span><span class="go">Yükselt ›</span></button>`;
+    ? `<button class="prem on" data-act="premium"><span class="em">👑</span><span><b>${t("premOn")}</b><small>${t("premOnSub")}</small></span></button>`
+    : `<button class="prem" data-act="premium"><span class="em">👑</span><span><b>Simba Premium</b><small>${t("premSub")}</small></span><span class="go">${t("premGo")}</span></button>`;
 }
 function teacherPromo() {
-  const ts = TEACHERS[S.lang]; const online = ts.filter((t) => t.on);
+  const online = TEACHERS[S.lang].filter((x) => x.on);
   return `<button class="card tpromo" data-act="tab" data-arg="teachers">
-    <div class="avs">${online.slice(0, 3).map((t) => avatar(t, "sm")).join("")}</div>
-    <span><b>Gerçek öğretmenle konuş</b><small><span class="live">${online.length} öğretmen çevrimiçi</span></small></span>
+    <div class="avs">${online.slice(0, 3).map((x) => avatar(x, "sm")).join("")}</div>
+    <span><b>${t("talk")}</b><small><span class="live">${t("online", { n: online.length })}</span></small></span>
     <span style="margin-left:auto;font-weight:900;color:var(--navy)">›</span>
   </button>`;
 }
 
 /* ================= views ================= */
 function viewHome() {
-  const p = S.progress[S.lang], stars = p * 10, mis = S.mistakes[S.lang].length;
-  const path = NODES.map((n, i) => {
+  const p = S.progress[S.lang], stars = p * 10, mis = S.mistakes[S.lang].length, labels = t("nodes");
+  const path = NODE_ICONS.map((ic, i) => {
     const st = i < p ? "done" : i === p ? "cur" : "lock";
     const x = [0, 34, -24, 30, -12][i];
     return `<div class="node-w ${st === "cur" ? "has-tip" : ""}" style="transform:translateX(${x}px)">
-      <button class="node ${st}" data-act="node" data-arg="${i}" aria-label="${n.label}">${n.icon}${st === "lock" ? '<span class="mini">🔒</span>' : st === "done" ? '<span class="mini">✅</span>' : ""}</button>
-      ${st === "cur" ? `<span class="tip">${p === 0 ? "İlk dersini başlat!" : "Sıradaki ders!"}</span>` : ""}
-      <span class="node-lbl">${n.label}</span>
+      <button class="node ${st}" data-act="node" data-arg="${i}" aria-label="${esc(labels[i])}">${ic}${st === "lock" ? '<span class="mini">🔒</span>' : st === "done" ? '<span class="mini">✅</span>' : ""}</button>
+      ${st === "cur" ? `<span class="tip">${p === 0 ? t("tipFirst") : t("tipNext")}</span>` : ""}
+      <span class="node-lbl">${labels[i]}</span>
     </div>`;
   }).join("");
   return `
     <section class="hero">
-      <h2>${p === 0 ? "Hoş geldin!" : "Gelişimin harika!"}</h2>
-      <p>${p >= NODES.length ? "Üniteyi bitirdin, tekrar zamanı!" : "Bir sonraki dersi başlayalım mı?"}</p>
-      <button class="btn btn-y" data-act="continue">Devam Et ▶</button>
+      <h2>${p === 0 ? t("welcome") : t("great")}</h2>
+      <p>${p >= NODE_ICONS.length ? t("unitDone") : t("nextQ")}</p>
+      <button class="btn btn-y" data-act="continue">${t("cont")}</button>
       <span class="spark">✨</span>
       <div class="marks"><span>${L().marks[0]}</span><span>${L().marks[1]}</span></div>
       ${lionSvg("lion-hoodie", "lion")}
     </section>
     <div class="quick">
-      <button class="qc lav" data-act="mistakes"><span class="em">📘</span><span><b>Ekstra Çalışma</b><small>Hatalı cümlelerini tekrar et</small></span><span class="chev">›</span>${mis ? `<span class="cnt">${mis}</span>` : ""}</button>
-      <button class="qc mint" data-act="practice"><span class="em">🎯</span><span><b>Alıştırmalar</b><small>Kendini sına</small></span><span class="chev">›</span></button>
+      <button class="qc lav" data-act="mistakes"><span class="em">📘</span><span><b>${t("extra")}</b><small>${t("extraSub")}</small></span><span class="chev">›</span>${mis ? `<span class="cnt">${mis}</span>` : ""}</button>
+      <button class="qc mint" data-act="practice"><span class="em">🎯</span><span><b>${t("practice")}</b><small>${t("practiceSub")}</small></span><span class="chev">›</span></button>
     </div>
     <section class="unit">
       <div class="unit-l">
-        <button class="lvl" data-act="tab" data-arg="courses"><span class="em">🏆</span><span><b>Seviye 1</b><small>Başlangıç · ${L().name}</small></span></button>
+        <button class="lvl" data-act="tab" data-arg="courses"><span class="em">🏆</span><span><b>${t("level")}</b><small>${t("beginner")} · ${langName(S.lang)}</small></span></button>
         <div class="readcard">
           <div class="pic">${lionSvg("lion-read")}</div>
           <div class="st"><b>⭐ ${stars} / 50</b><div class="bar"><i style="width:${stars * 2}%"></i></div></div>
@@ -789,23 +1015,23 @@ function viewLead() {
   const pod = (p, k) => `<div class="pd p${k}"><div class="ava">${p.a}</div><div class="base"><div class="rk">${k}</div><div class="nm">${esc(p.n)}</div><div class="gm">${fmt(p.g)} 💎</div></div></div>`;
   return `
     <section class="card league">
-      <div class="sec-h"><h3>🏆 Altın Lig</h3><span class="timer">Hafta bitiyor: 3g 4s</span></div>
-      <div class="sub" style="color:var(--muted);font-weight:700;font-size:14px">Dünyadaki diğer öğrencilerle yarış! İlk 5, Elmas Lig'e yükselir.</div>
+      <div class="sec-h"><h3>🏆 ${t("league")}</h3><span class="timer">${t("weekEnds")}</span></div>
+      <div style="color:var(--muted);font-weight:700;font-size:14px">${t("leadSub")}</div>
       <div class="podium">${pod(b, 2)}${pod(a, 1)}${pod(c, 3)}</div>
     </section>
     <section class="card lb">
-      ${list.slice(3).map((p, i) => `${i + 4 === 6 ? '<div class="zone">▲ Terfi bölgesi</div>' : ""}<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 4}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`).join("")}
+      ${list.slice(3).map((p, i) => `${i + 4 === 6 ? `<div class="zone">${t("promo")}</div>` : ""}<div class="lr ${p.me ? "me" : ""}"><span class="r">${i + 4}</span><span class="a">${p.a}</span><span class="n">${esc(p.n)}</span><span class="g">${fmt(p.g)} 💎</span></div>`).join("")}
     </section>`;
 }
 
 function viewCourses() {
-  const p = S.progress[S.lang];
-  const units = UNITS.map((u, i) => {
-    const pct = i === 0 ? Math.round(p / NODES.length * 100) : 0;
-    const locked = i > 0 && p < NODES.length;
+  const p = S.progress[S.lang], units = t("units"), titles = t("ctitles")[S.lang];
+  const ur = UNIT_ICONS.map((ic, i) => {
+    const pct = i === 0 ? Math.round(p / NODE_ICONS.length * 100) : 0;
+    const locked = i > 0 && p < NODE_ICONS.length;
     return `<button class="ur ${locked ? "lk" : ""}" data-act="${locked ? "lockedUnit" : "tab"}" data-arg="home">
-      <span class="ic">${locked ? "🔒" : u.icon}</span>
-      <span class="tx"><b>Ünite ${i + 1} · ${u.t}</b><small>${u.d}</small>${i === 0 ? `<div class="bar"><i style="width:${pct}%"></i></div>` : ""}</span>
+      <span class="ic">${locked ? "🔒" : ic}</span>
+      <span class="tx"><b>${t("unit", { n: i + 1 })} · ${units[i][0]}</b><small>${units[i][1]}</small>${i === 0 ? `<div class="bar"><i style="width:${pct}%"></i></div>` : ""}</span>
       <span style="font-weight:900;color:var(--navy)">${i === 0 ? pct + "%" : "›"}</span>
     </button>`;
   }).join("");
@@ -813,77 +1039,79 @@ function viewCourses() {
     const own = S.owned.includes(S.lang + i);
     return `<button class="card cc" data-act="course" data-arg="${i}">
       <div class="cv" style="background:${c.bg}">${c.e}</div>
-      <div class="ci"><b>${esc(c.t)}</b><small>${esc(c.by)} · ⭐ ${c.r} · ${c.n} ders</small>
-        <div class="ft">${own ? '<span class="badge green">Kütüphanende</span>' : c.prem ? '<span class="badge purple">👑 Premium\'a dahil</span>' : `<span class="price">₺${c.price}</span>`}<span class="badge">İçerik üretici</span></div>
+      <div class="ci"><b>${esc(titles[i])}</b><small>${esc(c.by)} · ⭐ ${c.r} · ${t("nLessons", { n: c.n })}</small>
+        <div class="ft">${own ? `<span class="badge green">${t("inLibrary")}</span>` : c.prem ? `<span class="badge purple">${t("inPremium")}</span>` : `<span class="price">${money(c.price)}</span>`}<span class="badge">${t("creator")}</span></div>
       </div></button>`;
   }).join("");
   return `
-    <section class="card chead"><span class="fl">${flag(L().flag, 30)}</span><span><b>${L().name} kursu</b><small>Türkçe konuşanlar için · A1</small></span><button class="link" style="margin-left:auto" data-act="langSheet">Değiştir</button></section>
-    <section><div class="sec-h"><h3>📚 Resmi müfredat</h3><span class="sub">Simba ekibi</span></div><div class="card units">${units}</div></section>
-    <section><div class="sec-h"><h3>🎬 İçerik üreticilerden</h3><span class="sub">Simba Studio</span></div><div class="cgrid">${cc}</div></section>`;
+    <section class="card chead"><span class="fl">${flag(L().flag, 30)}</span><span><b>${langName(S.lang)}</b><small>${t("speakers")}</small></span><button class="link" style="margin-left:auto" data-act="langSheet">${t("change")}</button></section>
+    <section><div class="sec-h"><h3>📚 ${t("official")}</h3><span class="sub">${t("team")}</span></div><div class="card units">${ur}</div></section>
+    <section><div class="sec-h"><h3>🎬 ${t("fromCreators")}</h3><span class="sub">Simba Studio</span></div><div class="cgrid">${cc}</div></section>`;
 }
 
 let teacherFilter = "all";
 function viewTeachers() {
-  let ts = TEACHERS[S.lang];
-  if (teacherFilter === "on") ts = ts.filter((t) => t.on);
-  const up = S.booked.length ? `<section><div class="sec-h"><h3>🗓️ Yaklaşan derslerin</h3></div>${S.booked.map((b) => `<div class="card upc" style="margin-bottom:8px">${avatar(b.t, "sm")}<span><b>${esc(b.t.n)} · ${b.dur} dk</b><small>${b.when}</small></span><span class="badge green" style="margin-left:auto">Onaylandı</span></div>`).join("")}</section>` : "";
+  const all = TEACHERS[S.lang];
+  let ts = all;
+  if (teacherFilter === "on") ts = ts.filter((x) => x.on);
+  if (teacherFilter === "mine") ts = ts.filter((x) => x.speaks.includes(S.ui));
+  const tags = t("tags");
+  const up = S.booked.length ? `<section><div class="sec-h"><h3>🗓️ ${t("upcoming")}</h3></div>${S.booked.map((b) => {
+    const tc = TEACHERS[b.lang][b.ti];
+    return `<div class="card upc" style="margin-bottom:8px">${avatar(tc, "sm")}<span><b>${esc(tc.n)} · ${t("min", { n: b.dur })}</b><small>${bookingWhen(b)}</small></span><span class="badge green" style="margin-left:auto">${t("confirmed")}</span></div>`;
+  }).join("")}</section>` : "";
   return `
     ${up}
     <div class="chips">
-      <button class="chipb ${teacherFilter === "all" ? "on" : ""}" data-act="tfilter" data-arg="all">Tümü</button>
-      <button class="chipb ${teacherFilter === "on" ? "on" : ""}" data-act="tfilter" data-arg="on">🟢 Şimdi müsait</button>
-      ${Object.entries(LANGS).map(([k, v]) => `<button class="chipb ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}">${flag(LANGS[k].flag)} ${v.name}</button>`).join("")}
+      <button class="chipb ${teacherFilter === "all" ? "on" : ""}" data-act="tfilter" data-arg="all">${t("tAll")}</button>
+      <button class="chipb ${teacherFilter === "mine" ? "on" : ""}" data-act="tfilter" data-arg="mine">${t("tMyLang")}</button>
+      <button class="chipb ${teacherFilter === "on" ? "on" : ""}" data-act="tfilter" data-arg="on">${t("tFree")}</button>
+      ${targets().map((k) => `<button class="chipb ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}">${flag(LANGS[k].flag)} ${langName(k)}</button>`).join("")}
     </div>
-    <div class="tgrid">${ts.map((t) => {
-      const i = TEACHERS[S.lang].indexOf(t);
+    <div class="tgrid">${ts.map((x) => {
+      const i = all.indexOf(x);
       return `<div class="card tc">
-        <div class="tc-top">${avatar(t)}<div><b>${esc(t.n)} ${flag(t.f)}</b><small>⭐ ${t.r} · ${fmt(t.l)} ders · ${t.on ? '<span class="live">Çevrimiçi</span>' : "Çevrimdışı"}</small></div></div>
-        <div class="tags">${t.tags.map((g) => `<span class="badge">${g}</span>`).join("")}</div>
-        <div class="acts"><span class="price">₺${t.p} <small>/ 25 dk</small></span>
-          <button class="btn btn-w" data-act="book" data-arg="${i}">Takvim</button>
-          ${t.on ? `<button class="btn btn-g" data-act="callNow" data-arg="${i}">Şimdi Görüş</button>` : ""}
+        <div class="tc-top">${avatar(x)}<div><b>${esc(x.n)} ${flag(x.f)}</b><small>⭐ ${x.r} · ${t("nLessons", { n: fmt(x.l) })} · ${x.on ? `<span class="live">${t("online1")}</span>` : t("offline")}</small></div></div>
+        <div class="tags">${x.tags.map((g) => `<span class="badge">${tags[g]}</span>`).join("")}<span class="badge gold">${t("speaks")}: ${x.speaks.map((s) => SPEAK_CODES[s]).join(" · ")}</span></div>
+        <div class="acts"><span class="price">${money(x.p)} <small>${t("per25")}</small></span>
+          <button class="btn btn-w" data-act="book" data-arg="${i}">${t("calendar")}</button>
+          ${x.on ? `<button class="btn btn-g" data-act="callNow" data-arg="${i}">${t("callNow")}</button>` : ""}
         </div></div>`;
     }).join("")}</div>`;
 }
 
 function viewProfile() {
-  const menu = [
-    { ic: "👑", t: "Premium'a Yükselt", d: "Daha fazla özellik, daha fazla öğrenme", a: "premium", bg: "#eee8ff" },
-    { ic: "📊", t: "İstatistiklerim", d: "Öğrenme ilerlemeni gör", a: "stats", bg: "#e6eeff" },
-    { ic: "⭐", t: "Favori Derslerim", d: "En sevdiğin dersler burada", a: "favs", bg: "#fff4d0" },
-    { ic: "⚙️", t: "Ayarlar", d: "Dil, bildirim ve daha fazlası", a: "settings", bg: "#eef1f7" },
-    { ic: "❓", t: "Yardım & Destek", d: "Soruların mı var?", a: "support", bg: "#e6eeff" },
-    { ic: "🚪", t: "Çıkış Yap", d: "Hesabından çıkış yap", a: "logout", bg: "#ffe3e7" },
-  ];
+  const me = t("me"), menu = t("menu");
+  const acts = [["👑", "premium", "#eee8ff"], ["📊", "stats", "#e6eeff"], ["⭐", "favs", "#fff4d0"], ["⚙️", "settings", "#eef1f7"], ["❓", "support", "#e6eeff"], ["🚪", "logout", "#ffe3e7"]];
   return `
     <section class="ph">
       <div class="big">${lionSvg()}</div>
-      <div><h2>Deniz Yılmaz <span class="vf">✓</span></h2><span class="ctry">${flag("tr")} Türkiye ›</span><q>Her gün biraz daha iyi! 🐾</q></div>
+      <div><h2>${esc(me.name)} <span class="vf">✓</span></h2><span class="ctry">${flag(LOCALES[S.ui].country)} ${esc(me.country)} ›</span><q>${esc(me.quote)}</q></div>
     </section>
-    <section class="card fstats"><div><b>12</b>Takip Edilen</div><div><b>8.5K</b>Takipçiler</div><div><b>24</b>Arkadaşlar</div></section>
+    <section class="card fstats"><div><b>12</b>${t("following")}</div><div><b>8.5K</b>${t("followers")}</div><div><b>24</b>${t("friends")}</div></section>
     <section class="card ach">
-      <div class="sec-h"><h3>🏆 Başarılarım</h3><button class="link" data-act="soon">Hepsini Gör ›</button></div>
+      <div class="sec-h"><h3>🏆 ${t("achievements")}</h3><button class="link" data-act="soon">${t("seeAll")}</button></div>
       <div class="medals">
-        <div class="medal"><div class="m" style="background:#fff1c7">⭐</div><b>${S.streak} Gün</b><small>Seri</small></div>
-        <div class="medal"><div class="m" style="background:#e6eeff">📘</div><b>${50 + S.quests.lessons} Ders</b><small>Tamamlandı</small></div>
-        <div class="medal"><div class="m" style="background:#ffe9da">🔥</div><b>5 Hafta</b><small>Aktiflik</small></div>
-        <div class="medal"><div class="m" style="background:#ffe3e7">🎯</div><b>%95</b><small>Doğruluk</small></div>
+        <div class="medal"><div class="m" style="background:#fff1c7">⭐</div><b>${t("mDays", { n: S.streak })}</b><small>${t("mStreak")}</small></div>
+        <div class="medal"><div class="m" style="background:#e6eeff">📘</div><b>${t("mLessons", { n: 50 + S.quests.lessons })}</b><small>${t("mDone")}</small></div>
+        <div class="medal"><div class="m" style="background:#ffe9da">🔥</div><b>${t("mWeeks", { n: 5 })}</b><small>${t("mActive")}</small></div>
+        <div class="medal"><div class="m" style="background:#ffe3e7">🎯</div><b>${t("mAcc", { n: 95 })}</b><small>${t("mAccL")}</small></div>
       </div>
     </section>
-    <section class="card menu">${menu.map((m) => `<button class="mi" data-act="${m.a}"><span class="ic" style="background:${m.bg}">${m.ic}</span><span><b>${m.t}</b><small>${m.d}</small></span><span class="chev">›</span></button>`).join("")}</section>`;
+    <section class="card menu">${acts.map(([ic, a, bg], i) => `<button class="mi" data-act="${a}"><span class="ic" style="background:${bg}">${ic}</span><span><b>${menu[i][0]}</b><small>${menu[i][1]}</small></span><span class="chev">›</span></button>`).join("")}</section>`;
 }
 
 /* ================= lesson engine ================= */
+// Hedef dil metni kursa, açıklama/çeviri tarafı arayüz (kaynak) diline göre gelir.
 function buildExercises(lang) {
-  const D = LANGS[lang];
-  const opts = (arr, okIdx = 0) => shuffle(arr.map((o, i) => ({ t: o[0], s: o[1], ok: i === okIdx })));
+  const D = LANGS[lang], src = t("src");
+  const opts = (arr) => shuffle(arr.map((o, i) => ({ t: o[0], s: o[1], ok: i === 0 })));
   return [
-    { kind: "choice", title: "Doğru çeviriyi seç", prompt: "“Merhaba” nasıl söylenir?", opts: opts(D.greet), speakOpts: true },
-    { kind: "listen", title: "Duyduğunu seç", audio: D.listen[0][0], opts: opts(D.listen), speakOpts: true },
-    { kind: "arrange", title: "Bu cümleyi çevir", prompt: "Benim adım Simba.", answer: D.sent, bank: shuffle([...D.sent, ...D.distract]) },
-    { kind: "match", title: "Eşleri bul" , pairs: D.pairs },
-    { kind: "choice", title: "Bu ne demek?", word: D.thanks[0], wordSub: D.thanks[1], opts: opts([["Teşekkürler"], ["Lütfen"], ["Hoşça kal"], ["Özür dilerim"]]) },
+    { kind: "choice", title: t("exChoice"), prompt: t("promptHello", { w: src.hello }), opts: opts(D.greet), speakOpts: true },
+    { kind: "listen", title: t("exListen"), audio: D.listen[0][0], opts: opts(D.listen), speakOpts: true },
+    { kind: "arrange", title: t("exArrange"), prompt: src.sentence, answer: D.sent, bank: shuffle([...D.sent, ...D.distract]) },
+    { kind: "match", title: t("exMatch"), pairs: D.pairs.map((w, i) => [w, src.pairs[i]]) },
+    { kind: "choice", title: t("exMeaning"), word: D.thanks[0], wordSub: D.thanks[1], opts: opts(src.thanks.map((w) => [w])) },
   ].map((e, i) => ({ ...e, id: i }));
 }
 let LS = null;
@@ -900,17 +1128,17 @@ const cur = () => LS.q[LS.i];
 function sub(word) { const s = L().sub[word]; return s ? `<small>${esc(s)}</small>` : ""; }
 
 function renderLesson() {
-  const ex = cur(), D = L();
+  const ex = cur();
   const pct = Math.round(LS.correct / LS.total * 100);
-  const tag = { lesson: `${NODES[LS.node].icon} ${NODES[LS.node].label}`, practice: "🎯 Alıştırma", mistakes: "📘 Ekstra çalışma" }[LS.mode];
+  const tag = { lesson: `${NODE_ICONS[LS.node]} ${t("nodes")[LS.node]}`, practice: t("tagPractice"), mistakes: t("tagExtra") }[LS.mode];
   let body = "", canCheck = false;
 
   if (ex.kind === "choice" || ex.kind === "listen") {
     canCheck = LS.sel !== null;
     const head = ex.kind === "listen"
-      ? `<div class="listen"><button class="spk" data-act="say" data-arg="${esc(ex.audio)}" aria-label="Dinle">🔊</button><button class="spk slow" data-act="saySlow" data-arg="${esc(ex.audio)}" aria-label="Yavaş dinle">🐢</button></div>`
+      ? `<div class="listen"><button class="spk" data-act="say" data-arg="${esc(ex.audio)}" aria-label="${esc(t("listenA"))}">🔊</button><button class="spk slow" data-act="saySlow" data-arg="${esc(ex.audio)}" aria-label="${esc(t("slowA"))}">🐢</button></div>`
       : ex.word
-        ? `<div class="word"><button class="spk" data-act="say" data-arg="${esc(ex.word)}" aria-label="Dinle">🔊</button><span>${esc(ex.word)}${ex.wordSub ? `<small>${esc(ex.wordSub)}</small>` : ""}</span></div>`
+        ? `<div class="word"><button class="spk" data-act="say" data-arg="${esc(ex.word)}" aria-label="${esc(t("listenA"))}">🔊</button><span>${esc(ex.word)}${ex.wordSub ? `<small>${esc(ex.wordSub)}</small>` : ""}</span></div>`
         : `<div class="say">${lionSvg()}<div class="bubble">${esc(ex.prompt)}</div></div>`;
     body = head + `<div class="opts">${ex.opts.map((o, i) => {
       let c = LS.sel === i ? "sel" : "";
@@ -935,18 +1163,18 @@ function renderLesson() {
 
   let foot;
   if (LS.checked) {
-    const right = rightAnswer(ex);
-    const good = ["Harika!", "Mükemmel!", "Süper!", "Aferin!"][Math.floor(Math.random() * 4)];
+    const praise = t("praise");
+    const good = praise[Math.floor(Math.random() * praise.length)];
     foot = `<div class="l-foot ${LS.ok ? "ok" : "bad"}"><div class="in">
-      <div class="fb"><span class="i">${LS.ok ? "✅" : "❌"}</span><div><b>${LS.ok ? good : "Doğru cevap:"}</b>${LS.ok ? "" : `<span>${esc(right)}</span>`}</div></div>
-      <button class="btn ${LS.ok ? "btn-g" : "btn-r"} btn-block" data-act="next" autofocus>Devam</button></div></div>`;
+      <div class="fb"><span class="i">${LS.ok ? "✅" : "❌"}</span><div><b>${LS.ok ? good : t("rightAnswer")}</b>${LS.ok ? "" : `<span>${esc(rightAnswer(ex))}</span>`}</div></div>
+      <button class="btn ${LS.ok ? "btn-g" : "btn-r"} btn-block" data-act="next">${t("next")}</button></div></div>`;
   } else {
-    foot = `<div class="l-foot"><div class="in"><span style="color:var(--muted);font-weight:800;font-size:13px">${ex.kind === "match" ? "Kelimeleri anlamlarıyla eşleştir" : "İpucu: 1–4 tuşları ve Enter çalışır"}</span>
-      <button class="btn btn-g btn-block" data-act="check" ${canCheck ? "" : "disabled"}>${ex.kind === "match" ? "Eşleştir" : "Kontrol Et"}</button></div></div>`;
+    foot = `<div class="l-foot"><div class="in"><span style="color:var(--muted);font-weight:800;font-size:13px">${ex.kind === "match" ? t("matchHint") : t("keyHint")}</span>
+      <button class="btn btn-g btn-block" data-act="check" ${canCheck ? "" : "disabled"}>${ex.kind === "match" ? t("doMatch") : t("check")}</button></div></div>`;
   }
 
   $("#lesson").innerHTML = `
-    <div class="l-head"><button class="x" data-act="quit" aria-label="Dersten çık">✕</button><div class="bar"><i style="width:${pct}%"></i></div><span class="hearts">❤️ ${S.premium ? "∞" : S.hearts}</span></div>
+    <div class="l-head"><button class="x" data-act="quit" aria-label="${esc(t("quitLesson"))}">✕</button><div class="bar"><i style="width:${pct}%"></i></div><span class="hearts">❤️ ${S.premium ? "∞" : S.hearts}</span></div>
     <div class="l-body"><div class="l-tag">${tag}</div><h2>${ex.title}</h2>${body}</div>
     ${foot}`;
   if (ex.kind === "listen" && !LS.checked && LS.sel === null && !LS.played) { LS.played = true; setTimeout(() => speak(ex.audio), 250); }
@@ -984,20 +1212,20 @@ function finishLesson() {
   const earned = (LS.mode === "lesson" ? 20 : 10) + (LS.wrong === 0 ? 5 : 0);
   S.gems += earned; S.weekly += earned;
   S.quests.lessons++; S.quests.minutes += Math.max(1, Math.round(sec / 60));
-  if (LS.mode === "lesson" && LS.node === S.progress[S.lang] && S.progress[S.lang] < NODES.length) S.progress[S.lang]++;
+  if (LS.mode === "lesson" && LS.node === S.progress[S.lang] && S.progress[S.lang] < NODE_ICONS.length) S.progress[S.lang]++;
   let streakUp = false;
   if (!S.doneToday) { S.doneToday = true; S.streak++; streakUp = true; }
   save();
   $("#lesson").innerHTML = `<div class="done-scr">
     ${lionSvg("lion-hoodie")}
-    <h2>${LS.mode === "lesson" ? "Ders tamamlandı!" : "Çalışma tamamlandı!"}</h2>
-    <div style="color:var(--muted);font-weight:800">${LS.wrong === 0 ? "Hatasız! +5 bonus elmas 🎉" : "Hataların Ekstra Çalışma'ya eklendi."}</div>
+    <h2>${LS.mode === "lesson" ? t("lessonDone") : t("practiceDone")}</h2>
+    <div style="color:var(--muted);font-weight:800">${LS.wrong === 0 ? t("perfect") : t("mistakesAdded")}</div>
     <div class="tiles">
-      <div class="tile" style="border-color:#5b8bff"><small style="background:#5b8bff">Elmas</small><div>💎 +${earned}</div></div>
-      <div class="tile" style="border-color:#1fb873"><small style="background:#1fb873">Doğruluk</small><div>🎯 %${acc}</div></div>
-      <div class="tile" style="border-color:#ffb800"><small style="background:#ffb800">Süre</small><div>⏱ ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}</div></div>
+      <div class="tile" style="border-color:#5b8bff"><small style="background:#5b8bff">${t("gems")}</small><div>💎 +${earned}</div></div>
+      <div class="tile" style="border-color:#1fb873"><small style="background:#1fb873">${t("accuracy")}</small><div>🎯 ${t("mAcc", { n: acc })}</div></div>
+      <div class="tile" style="border-color:#ffb800"><small style="background:#ffb800">${t("time")}</small><div>⏱ ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}</div></div>
     </div>
-    <button class="btn btn-y" style="min-width:240px;margin-top:10px" data-act="closeDone" data-arg="${streakUp ? 1 : 0}">Devam Et</button>
+    <button class="btn btn-y" style="min-width:240px;margin-top:10px" data-act="closeDone" data-arg="${streakUp ? 1 : 0}">${t("cont").replace(" ▶", "")}</button>
   </div>`;
 }
 function closeLesson() { $("#lesson").classList.remove("show"); $("#lesson").innerHTML = ""; LS = null; render(); }
@@ -1009,179 +1237,195 @@ function refreshSheet() { if (sheetFn) $("#sheet").innerHTML = '<div class="grab
 function closeSheet() { $("#sheet-wrap").classList.remove("show"); sheetFn = null; }
 
 function langSheet() {
-  return `<h3>Kurs seç</h3><p class="lead">Türkçe konuşanlar için</p>` +
-    Object.entries(LANGS).map(([k, v]) => `<button class="lrow ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}"><span class="fl">${flag(LANGS[k].flag)}</span><span><b>${v.name}</b><small>${S.progress[k]} / ${NODES.length} ders · Seviye 1</small></span><div class="bar"><i style="width:${S.progress[k] / NODES.length * 100}%"></i></div></button>`).join("") +
-    `<p class="note">Yeni diller Simba Studio'dan içerik eklenerek açılır.</p>`;
+  return `<h3>${t("chooseCourse")}</h3><p class="lead">${t("speakers").replace(" · A1", "")}</p>` +
+    targets().map((k) => `<button class="lrow ${S.lang === k ? "on" : ""}" data-act="setLang" data-arg="${k}"><span class="fl">${flag(LANGS[k].flag, 22)}</span><span><b>${langName(k)}</b><small>${t("courseProg", { p: S.progress[k] })}</small></span><div class="bar"><i style="width:${S.progress[k] / NODE_ICONS.length * 100}%"></i></div></button>`).join("") +
+    `<p class="note">${t("newLangs")}</p>`;
 }
 function heartsSheet() {
-  return `<h3>${S.hearts <= 0 ? "Canın bitti 💔" : "Canların ❤️ " + S.hearts + " / 5"}</h3>
-    <p class="lead">Yanlış cevaplar can götürür. Canlar 4 saatte bir yenilenir.</p>
+  return `<h3>${S.hearts <= 0 ? t("noHearts") : t("heartsN", { n: S.hearts })}</h3>
+    <p class="lead">${t("heartsLead")}</p>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn btn-b btn-block" data-act="premium">👑 Premium ile sınırsız can</button>
-      <button class="btn btn-w btn-block" data-act="refill" ${S.gems < 350 || S.hearts >= 5 ? "disabled" : ""}>Canları doldur · 💎 350</button>
-      <button class="btn btn-w btn-block" data-act="closeSheet">Kapat</button>
+      <button class="btn btn-b btn-block" data-act="premium">${t("heartsPrem")}</button>
+      <button class="btn btn-w btn-block" data-act="refill" ${S.gems < 350 || S.hearts >= 5 ? "disabled" : ""}>${t("refill")}</button>
+      <button class="btn btn-w btn-block" data-act="closeSheet">${t("close")}</button>
     </div>`;
 }
-let premPlan = "y";
+let premPlan = "y", codeErr = false;
 function premiumSheet() {
-  return `<div style="text-align:center;font-size:56px">👑</div><h3 style="text-align:center">Simba Premium</h3><p class="lead" style="text-align:center">Daha fazla özellik, daha hızlı ilerleme!</p>
-    <ul class="feat"><li><span>❤️</span>Sınırsız can</li><li><span>📘</span>Kişisel hata tekrarı (aralıklı tekrar)</li><li><span>🎬</span>Premium'a dahil creator kursları</li><li><span>👩‍🏫</span>Her ay 1 ücretsiz öğretmen dersi</li><li><span>🚫</span>Reklamsız</li></ul>
-    <button class="plan ${premPlan === "y" ? "on" : ""}" data-act="plan" data-arg="y"><span class="save">%50 indirim</span><span><b>Yıllık</b><small>₺74,99 / ay</small></span><span class="p">₺899,99<br><small>/ yıl</small></span></button>
-    <button class="plan ${premPlan === "m" ? "on" : ""}" data-act="plan" data-arg="m"><span><b>Aylık</b><small>İstediğin zaman iptal</small></span><span class="p">₺149,99<br><small>/ ay</small></span></button>
-    <button class="btn btn-y btn-block" style="margin-top:6px" data-act="buyPremium">${S.premium ? "Premium zaten aktif" : "7 gün ücretsiz dene"}</button>
-    <p class="note">Demo — ödeme alınmaz. Mobilde App Store / Google Play, web'de iyzico.</p>`;
+  const pr = t("prices");
+  return `<div style="text-align:center;font-size:56px">👑</div><h3 style="text-align:center">Simba Premium</h3><p class="lead" style="text-align:center">${t("premLead")}</p>
+    <ul class="feat">${["❤️", "📘", "🎬", "👩‍🏫", "🚫"].map((ic, i) => `<li><span>${ic}</span>${t("feats")[i]}</li>`).join("")}</ul>
+    <button class="plan ${premPlan === "y" ? "on" : ""}" data-act="plan" data-arg="y"><span class="save">${t("save50")}</span><span><b>${t("yearly")}</b><small>${pr.ym} ${t("perMonth")}</small></span><span class="p">${pr.y}<br><small>${t("perYear")}</small></span></button>
+    <button class="plan ${premPlan === "m" ? "on" : ""}" data-act="plan" data-arg="m"><span><b>${t("monthly")}</b><small>${t("cancelAny")}</small></span><span class="p">${pr.m}<br><small>${t("perMonth")}</small></span></button>
+    <button class="btn btn-y btn-block" style="margin-top:6px" data-act="buyPremium">${S.premium ? t("premAlready") : t("trial")}</button>
+    <form class="cin" data-form="code" style="margin-top:12px">
+      <input id="code-in" placeholder="${t("codePh")}" aria-label="${esc(t("code"))}" autocomplete="off" style="text-transform:uppercase">
+      <button class="btn btn-w" style="padding:10px 16px">${t("codeBtn")}</button>
+    </form>
+    <p class="note" style="margin-top:6px">${codeErr ? `<span style="color:var(--red-d)">${t("codeBad")}</span>` : `🎟️ ${t("code")}`}</p>
+    <p class="note">${t("premNote")}</p>`;
 }
 let BK = null;
 function bookSheet() {
-  const t = TEACHERS[S.lang][BK.t];
-  const now = new Date();
-  const days = Array.from({ length: 6 }, (_, i) => { const d = new Date(now); d.setDate(d.getDate() + i); return d; });
-  const dn = (d, i) => i === 0 ? "Bugün" : i === 1 ? "Yarın" : d.toLocaleDateString("tr-TR", { weekday: "short" });
+  const tc = TEACHERS[S.lang][BK.ti];
   const slots = ["09:00", "10:30", "13:00", "17:30", "19:00", "20:30", "21:30", "22:30", "23:00"];
   const busy = (d, s) => (d * 7 + s * 3) % 4 === 0 || (d === 0 && s < 4);
-  const price = BK.dur === 25 ? t.p : Math.round(t.p * 1.8);
-  return `<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${avatar(t)}<div><h3>${esc(t.n)} ${flag(t.f)}</h3><div style="color:var(--muted);font-weight:700;font-size:13px">⭐ ${t.r} · ${t.tags.join(" · ")}</div></div></div>
-    <div class="days">${days.map((d, i) => `<button class="day ${BK.day === i ? "on" : ""}" data-act="bday" data-arg="${i}">${dn(d, i)}<b>${d.getDate()}</b></button>`).join("")}</div>
+  const p = BK.dur === 25 ? tc.p : Math.round(tc.p * 1.8);
+  let tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  return `<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${avatar(tc)}<div><h3>${esc(tc.n)} ${flag(tc.f)}</h3><div style="color:var(--muted);font-weight:700;font-size:13px">⭐ ${tc.r} · ${tc.tags.map((g) => t("tags")[g]).join(" · ")}</div></div></div>
+    <div class="days">${[0, 1, 2, 3, 4, 5].map((i) => { const d = new Date(); d.setDate(d.getDate() + i); return `<button class="day ${BK.day === i ? "on" : ""}" data-act="bday" data-arg="${i}">${dayLabel(i)}<b>${d.getDate()}</b></button>`; }).join("")}</div>
     <div class="slots">${slots.map((s, i) => `<button class="slot ${BK.slot === s ? "on" : ""}" data-act="bslot" data-arg="${s}" ${busy(BK.day, i) ? "disabled" : ""}>${s}</button>`).join("")}</div>
-    <div class="durs"><button class="btn ${BK.dur === 25 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="25">25 dk</button><button class="btn ${BK.dur === 50 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="50">50 dk</button></div>
-    <button class="btn btn-y btn-block" data-act="bconfirm" ${BK.slot ? "" : "disabled"}>${BK.slot ? `Rezervasyonu onayla · ₺${price}` : "Bir saat seç"}</button>
-    <p class="note">Saatler senin saat diliminde gösterilir (Europe/Istanbul).</p>`;
+    <div class="durs"><button class="btn ${BK.dur === 25 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="25">${t("min", { n: 25 })}</button><button class="btn ${BK.dur === 50 ? "btn-b" : "btn-w"}" data-act="bdur" data-arg="50">${t("min", { n: 50 })}</button></div>
+    <button class="btn btn-y btn-block" data-act="bconfirm" ${BK.slot ? "" : "disabled"}>${BK.slot ? t("bookConfirm", { p: money(p) }) : t("pickTime")}</button>
+    <p class="note">${t("tzNote", { tz })}</p>`;
 }
 function notifSheet() {
-  const up = S.booked[0];
-  return `<h3>Bildirimler</h3>
-    <div class="nt"><span class="ic">🔥</span><div><b>Serini koru!</b><small>${S.doneToday ? "Bugünkü dersini yaptın, harika!" : "Bugün henüz ders yapmadın."}</small></div></div>
-    ${up ? `<div class="nt"><span class="ic">👩‍🏫</span><div><b>${esc(up.t.n)} ile dersin var</b><small>${up.when}</small></div></div>` : ""}
-    <div class="nt"><span class="ic">🏆</span><div><b>Altın Lig'de yükseliyorsun</b><small>Terfi bölgesine ${fmt(Math.max(0, LEAGUE[4].g - S.weekly))} 💎 kaldı</small></div></div>
-    <div class="nt"><span class="ic">🎬</span><div><b>Yeni kurs: ${esc(CREATOR[S.lang][0].t)}</b><small>${esc(CREATOR[S.lang][0].by)} yeni ders ekledi</small></div></div>`;
+  const up = S.booked[0], c0 = CREATOR[S.lang][0];
+  return `<h3>${t("notifs")}</h3>
+    <div class="nt"><span class="ic">🔥</span><div><b>${t("nKeep")}</b><small>${S.doneToday ? t("nKeepDone") : t("nKeepTodo")}</small></div></div>
+    ${up ? `<div class="nt"><span class="ic">👩‍🏫</span><div><b>${t("nLesson", { n: esc(TEACHERS[up.lang][up.ti].n) })}</b><small>${bookingWhen(up)}</small></div></div>` : ""}
+    <div class="nt"><span class="ic">🏆</span><div><b>${t("nLeague")}</b><small>${t("nLeagueSub", { g: fmt(Math.max(0, LEAGUE[4].g - S.weekly)) })}</small></div></div>
+    <div class="nt"><span class="ic">🎬</span><div><b>${t("nCourse", { t: esc(t("ctitles")[S.lang][0]) })}</b><small>${t("nCourseSub", { by: esc(c0.by) })}</small></div></div>`;
 }
-let chatLog = [{ me: false, t: "Merhaba Deniz 👋 Simba Destek'e hoş geldin. Nasıl yardımcı olabiliriz?" }];
+// İlk mesaj anahtar olarak saklanır ki dil değişince o da çevrilsin
+let chatLog = [{ me: false, key: "supportHi" }];
 function supportSheet() {
-  return `<h3>Yardım & Destek</h3><p class="lead">Mesajın Simba Admin panelindeki destek ekibine iletilir.</p>
-    <div class="chat" id="chat">${chatLog.map((m) => `<div class="msg ${m.me ? "me" : "them"}">${m.me ? "" : '<span class="who">Destek ekibi</span>'}${esc(m.t)}</div>`).join("")}</div>
-    <form class="cin" data-form="chat"><input id="chat-in" placeholder="Mesajını yaz…" autocomplete="off"><button class="btn btn-b" style="padding:10px 18px">Gönder</button></form>`;
+  const txt = (m) => m.key ? t(m.key, { name: t("me").first, id: m.id }) : m.t;
+  return `<h3>${t("support")}</h3><p class="lead">${t("supportLead")}</p>
+    <div class="chat" id="chat">${chatLog.map((m) => `<div class="msg ${m.me ? "me" : "them"}">${m.me ? "" : `<span class="who">${t("supportTeam")}</span>`}${esc(txt(m))}</div>`).join("")}</div>
+    <form class="cin" data-form="chat"><input id="chat-in" placeholder="${esc(t("msgPh"))}" autocomplete="off"><button class="btn btn-b" style="padding:10px 18px">${t("send")}</button></form>`;
 }
 const settings = { notif: true, sfx: true, remind: true };
 function settingsSheet() {
-  const row = (k, t) => `<div class="tog">${t}<button class="sw ${settings[k] ? "on" : ""}" data-act="sw" data-arg="${k}" aria-label="${t}"></button></div>`;
-  return `<h3>Ayarlar</h3>
-    <div class="tog">Arayüz dili <select class="sel-in" data-change="uiLang"><option>Türkçe</option><option>English</option><option>Русский</option><option>Türkmençe</option></select></div>
-    ${row("notif", "Bildirimler")}${row("sfx", "Ses efektleri")}${row("remind", "Seri hatırlatıcı (20:00)")}
-    <div class="tog">Günlük hedef <select class="sel-in"><option>5 dk · Rahat</option><option selected>10 dk · Normal</option><option>20 dk · Ciddi</option></select></div>
-    <button class="btn btn-w btn-block" style="margin-top:14px" data-act="reset">Demo verisini sıfırla</button>`;
+  const row = (k, label) => `<div class="tog">${label}<button class="sw ${settings[k] ? "on" : ""}" data-act="sw" data-arg="${k}" aria-label="${esc(label)}"></button></div>`;
+  const goals = t("goals");
+  return `<h3>${t("settings")}</h3>
+    <div class="tog"><label for="ui-lang">${t("uiLang")}</label><select id="ui-lang" class="sel-in" data-change="uiLang">${Object.entries(LOCALES).map(([k, v]) => `<option value="${k}" ${S.ui === k ? "selected" : ""}>${v.label}</option>`).join("")}</select></div>
+    ${row("notif", t("notifs"))}${row("sfx", t("sfx"))}${row("remind", t("remind"))}
+    <div class="tog"><label for="goal">${t("goal")}</label><select id="goal" class="sel-in">${goals.map((g, i) => `<option ${i === 1 ? "selected" : ""}>${g}</option>`).join("")}</select></div>
+    <button class="btn btn-w btn-block" style="margin-top:14px" data-act="reset">${t("resetBtn")}</button>`;
 }
 function statsSheet() {
-  const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
   const vals = [12, 8, 15, 10, 6, 18];
   const today = Math.min(20, S.quests.minutes);
-  return `<h3>İstatistiklerim</h3><p class="lead">Bu hafta · ${vals.reduce((a, b) => a + b, 0) + today} dakika</p>
+  // Pazartesi'den başlayan kısa gün adları (2024-01-01 bir pazartesi)
+  const days = Array.from({ length: 7 }, (_, i) => weekdayShort(new Date(2024, 0, 1 + i)));
+  return `<h3>${t("stats")}</h3><p class="lead">${t("thisWeek", { n: vals.reduce((a, b) => a + b, 0) + today })}</p>
     <div class="wk">${[...vals, today].map((v, i) => `<div class="${i === 6 ? "today" : ""}"><i style="height:${Math.max(4, v / 20 * 100)}%"></i>${days[i]}</div>`).join("")}</div>
-    <div class="fstats card" style="margin-top:10px"><div><b>${S.streak}</b>Gün seri</div><div><b>${fmt(S.gems)}</b>Elmas</div><div><b>${Object.values(S.progress).reduce((a, b) => a + b, 0)}</b>Ders</div></div>`;
+    <div class="fstats card" style="margin-top:10px"><div><b>${S.streak}</b>${t("dayStreak")}</div><div><b>${fmt(S.gems)}</b>${t("gems")}</div><div><b>${Object.values(S.progress).reduce((a, b) => a + b, 0)}</b>${t("lessonsL")}</div></div>`;
 }
 let rateVal = 0, rateT = null;
 function rateSheet() {
-  return `<div style="text-align:center"><div style="display:flex;justify-content:center;margin-bottom:10px">${avatar(rateT)}</div><h3>${esc(rateT.n)} ile ders nasıldı?</h3><p class="lead">Değerlendirmen öğretmen profilinde görünür.</p>
+  return `<div style="text-align:center"><div style="display:flex;justify-content:center;margin-bottom:10px">${avatar(rateT)}</div><h3>${t("rateQ", { n: esc(rateT.n) })}</h3><p class="lead">${t("rateLead")}</p>
     <div class="stars">${[1, 2, 3, 4, 5].map((n) => `<button class="${n <= rateVal ? "on" : ""}" data-act="rate" data-arg="${n}">⭐</button>`).join("")}</div>
-    <button class="btn btn-y btn-block" data-act="rateSend" ${rateVal ? "" : "disabled"}>Gönder</button></div>`;
+    <button class="btn btn-y btn-block" data-act="rateSend" ${rateVal ? "" : "disabled"}>${t("send")}</button></div>`;
 }
 function courseSheet(i) {
-  const c = CREATOR[S.lang][i], own = S.owned.includes(S.lang + i);
+  const c = CREATOR[S.lang][i], own = S.owned.includes(S.lang + i), title = t("ctitles")[S.lang][i];
   return `<div style="height:110px;border-radius:20px;display:grid;place-items:center;font-size:56px;background:${c.bg};margin-bottom:14px">${c.e}</div>
-    <h3>${esc(c.t)}</h3><p class="lead">${esc(c.by)} · ⭐ ${c.r} · ${c.n} ders · Video + egzersiz</p>
-    <ul class="feat"><li><span>🎥</span>Kısa video dersler</li><li><span>✍️</span>Her dersin sonunda alıştırma</li><li><span>📜</span>Tamamlama rozeti</li></ul>
-    ${own ? `<button class="btn btn-g btn-block" data-act="closeSheet">Kütüphanende ✓</button>`
-      : c.prem ? `<button class="btn btn-b btn-block" data-act="${S.premium ? "own" : "premium"}" data-arg="${i}">${S.premium ? "Başla (Premium)" : "👑 Premium ile aç"}</button>`
-      : `<button class="btn btn-y btn-block" data-act="own" data-arg="${i}">Satın al · ₺${c.price}</button>`}
-    <p class="note">Gelirin %70'i içerik üreticisine gider. Demo — ödeme alınmaz.</p>`;
+    <h3>${esc(title)}</h3><p class="lead">${t("courseMeta", { by: esc(c.by), r: c.r, n: c.n })}</p>
+    <ul class="feat">${["🎥", "✍️", "📜"].map((ic, k) => `<li><span>${ic}</span>${t("cfeats")[k]}</li>`).join("")}</ul>
+    ${own ? `<button class="btn btn-g btn-block" data-act="closeSheet">${t("inLib")}</button>`
+      : c.prem ? `<button class="btn btn-b btn-block" data-act="${S.premium ? "own" : "premium"}" data-arg="${i}">${S.premium ? t("startPrem") : t("openPrem")}</button>`
+      : `<button class="btn btn-y btn-block" data-act="own" data-arg="${i}">${t("buy", { p: money(c.price) })}</button>`}
+    <p class="note">${t("courseNote")}</p>`;
 }
 
 /* ================= video call (mock) ================= */
 let callT = null, callSec = 0, callState = {};
-function openCall(t) {
-  callSec = 0; callState = { t, mic: true, cam: true };
+function openCall(tc) {
+  callSec = 0; callState = { t: tc, mic: true, cam: true };
   const ov = $("#call"); ov.classList.add("show");
   ov.innerHTML = `<div class="vid">
-      <div class="meta"><div><b>${esc(t.n)} ${flag(t.f)}</b><small>${L().name} · 25 dk ders</small></div><span class="rec" id="ctime">Bağlanıyor…</span></div>
-      <div style="display:flex;flex-direction:column;align-items:center">${avatar(t)}<div class="status" id="cstat">Öğretmen bekleniyor…</div></div>
-      <div class="self" id="cself">${lionSvg()}</div>
+      <div class="meta"><div><b>${esc(tc.n)} ${flag(tc.f)}</b><small>${t("callMeta", { lang: langName(S.lang) })}</small></div><span class="rec" id="ctime">${t("connecting")}</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center">${avatar(tc)}<div class="status" id="cstat">${t("waiting")}</div></div>
+      <div class="self" id="cself" data-off="${esc(t("camOff"))}">${lionSvg()}</div>
       <div class="sub" id="csub" hidden></div>
     </div>
     <div class="ctrls">
-      <button class="cb" data-act="cmic" aria-label="Mikrofon">🎙️</button>
-      <button class="cb" data-act="ccam" aria-label="Kamera">📷</button>
-      <button class="cb" data-act="cchat" aria-label="Kelime notu">📝</button>
-      <button class="cb end" data-act="cend" aria-label="Görüşmeyi bitir">📞</button>
+      <button class="cb" data-act="cmic" aria-label="${esc(t("micA"))}">🎙️</button>
+      <button class="cb" data-act="ccam" aria-label="${esc(t("camA"))}">📷</button>
+      <button class="cb" data-act="cchat" aria-label="${esc(t("notesA"))}">📝</button>
+      <button class="cb end" data-act="cend" aria-label="${esc(t("endA"))}">📞</button>
     </div>`;
   setTimeout(() => {
     if (!callState.t) return;
-    $("#cstat").textContent = "Bağlandı · HD";
-    const s = $("#csub"); s.hidden = false; s.textContent = `${t.n}: ${t.line}`;
+    $("#cstat").textContent = t("connected");
+    const s = $("#csub"); s.hidden = false; s.textContent = `${tc.n}: ${tc.line}`;
     callT = setInterval(() => { callSec++; const e = $("#ctime"); if (e) e.textContent = `● ${String(Math.floor(callSec / 60)).padStart(2, "0")}:${String(callSec % 60).padStart(2, "0")}`; }, 1000);
   }, 1500);
 }
 function endCall() {
-  clearInterval(callT); const t = callState.t; callState = {};
+  clearInterval(callT); const tc = callState.t; callState = {};
   $("#call").classList.remove("show"); $("#call").innerHTML = "";
-  rateT = t; rateVal = 0; openSheet(rateSheet);
+  rateT = tc; rateVal = 0; openSheet(rateSheet);
 }
 
 /* ================= actions ================= */
+function setUi(code) {
+  if (!LOCALES[code] || code === S.ui) return;
+  S.ui = code;
+  if (!targets().includes(S.lang)) S.lang = "en";
+  save(); render(); refreshSheet();
+  if (LS) renderLesson();
+  toast(t("uiChanged"));
+}
 const A = {
-  tab: (t) => { S.tab = t; save(); render(); $("#main").scrollTop = 0; },
-  continue: () => startLesson("lesson", Math.min(S.progress[S.lang], NODES.length - 1)),
-  node: (i) => { i = +i; if (i > S.progress[S.lang]) return toast("🔒 Önce önceki dersi tamamla"); startLesson("lesson", i); },
-  mistakes: () => S.mistakes[S.lang].length ? startLesson("mistakes") : toast("🎉 Tekrar edilecek hatan yok. Bir ders yap!"),
+  tab: (x) => { S.tab = x; save(); render(); $("#main").scrollTop = 0; },
+  continue: () => startLesson("lesson", Math.min(S.progress[S.lang], NODE_ICONS.length - 1)),
+  node: (i) => { i = +i; if (i > S.progress[S.lang]) return toast(t("locked")); startLesson("lesson", i); },
+  mistakes: () => S.mistakes[S.lang].length ? startLesson("mistakes") : toast(t("noMistakes")),
   practice: () => startLesson("practice"),
   langSheet: () => openSheet(langSheet),
-  setLang: (k) => { S.lang = k; save(); closeSheet(); render(); toast(`${LANGS[k].name} kursuna geçtin`); },
-  streakInfo: () => toast(`🔥 ${S.streak} günlük seri! ${S.doneToday ? "Bugünü tamamladın." : "Bugün bir ders yapmayı unutma."}`),
+  setLang: (k) => { S.lang = k; save(); closeSheet(); render(); toast(t("switched", { lang: langName(k) })); },
+  streakInfo: () => toast(t("streakToast", { n: S.streak, m: S.doneToday ? t("streakDone") : t("streakTodo") })),
   heartsSheet: () => openSheet(heartsSheet),
-  refill: () => { S.gems -= 350; S.hearts = 5; save(); closeSheet(); render(); toast("❤️ Canların doldu!"); },
+  refill: () => { S.gems -= 350; S.hearts = 5; save(); closeSheet(); render(); toast(t("refilled")); },
   notifs: () => openSheet(notifSheet),
-  premium: () => openSheet(premiumSheet),
+  premium: () => { codeErr = false; openSheet(premiumSheet); },
   plan: (p) => { premPlan = p; refreshSheet(); },
-  buyPremium: () => { if (!S.premium) { S.premium = true; save(); render(); toast("👑 Premium aktif — sınırsız can!"); } closeSheet(); },
+  buyPremium: () => { if (!S.premium) { S.premium = true; save(); render(); toast(t("premiumOn")); } closeSheet(); },
   closeSheet: () => closeSheet(),
   sheetBg: (_, el, e) => { if (e.target === el) closeSheet(); },
-  lockedUnit: () => toast("🔒 Önce Ünite 1'i bitir"),
+  lockedUnit: () => toast(t("unitLocked")),
   course: (i) => openSheet(() => courseSheet(+i)),
-  own: (i) => { S.owned.push(S.lang + i); save(); closeSheet(); render(); toast("📚 Kurs kütüphanene eklendi"); },
+  own: (i) => { S.owned.push(S.lang + i); save(); closeSheet(); render(); toast(t("owned")); },
   tfilter: (f) => { teacherFilter = f; render(); },
-  book: (i) => { BK = { t: +i, day: 1, slot: null, dur: 25 }; openSheet(bookSheet); },
+  book: (i) => { BK = { ti: +i, day: 1, slot: null, dur: 25 }; openSheet(bookSheet); },
   bday: (d) => { BK.day = +d; BK.slot = null; refreshSheet(); },
   bslot: (s) => { BK.slot = s; refreshSheet(); },
   bdur: (d) => { BK.dur = +d; refreshSheet(); },
   bconfirm: () => {
-    const t = TEACHERS[S.lang][BK.t]; const d = new Date(); d.setDate(d.getDate() + BK.day);
-    const when = `${BK.day === 0 ? "Bugün" : BK.day === 1 ? "Yarın" : d.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })} · ${BK.slot}`;
-    S.booked.unshift({ t, dur: BK.dur, when }); save(); closeSheet(); render(); toast(`✅ ${t.n} ile ders rezerve edildi`);
+    const tc = TEACHERS[S.lang][BK.ti]; const d = new Date(); d.setDate(d.getDate() + BK.day);
+    S.booked.unshift({ lang: S.lang, ti: BK.ti, dur: BK.dur, date: d.toISOString(), slot: BK.slot });
+    save(); closeSheet(); render(); toast(t("booked", { n: tc.n }));
   },
   callNow: (i) => openCall(TEACHERS[S.lang][+i]),
   cmic: (_, el) => { callState.mic = !callState.mic; el.classList.toggle("off", !callState.mic); el.textContent = callState.mic ? "🎙️" : "🔇"; },
   ccam: (_, el) => { callState.cam = !callState.cam; el.classList.toggle("off", !callState.cam); $("#cself").classList.toggle("off", !callState.cam); },
-  cchat: () => toast("📝 Ders notları: öğretmenin yazdığı kelimeler burada görünür"),
+  cchat: () => toast(t("callNotes")),
   cend: () => endCall(),
   rate: (n) => { rateVal = +n; refreshSheet(); },
-  rateSend: () => { closeSheet(); toast("🙏 Teşekkürler! Değerlendirmen kaydedildi."); },
+  rateSend: () => { closeSheet(); toast(t("rated")); },
   stats: () => openSheet(statsSheet),
   settings: () => openSheet(settingsSheet),
   sw: (k) => { settings[k] = !settings[k]; refreshSheet(); },
   support: () => { openSheet(supportSheet); const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight; },
-  favs: () => toast("⭐ Henüz favori dersin yok"),
-  soon: () => toast("🏅 Tüm başarılar yakında"),
-  logout: () => toast("🙂 Demo modunda çıkış yapılamaz"),
-  reset: () => { S = JSON.parse(JSON.stringify(DEFAULT)); save(); closeSheet(); render(); toast("Demo verisi sıfırlandı"); },
-  say: (t) => speak(t),
-  saySlow: (t) => speak(t, 0.6),
+  favs: () => toast(t("noFavs")),
+  soon: () => toast(t("soon")),
+  logout: () => toast(t("noLogout")),
+  reset: () => { const ui = S.ui; S = JSON.parse(JSON.stringify(DEFAULT)); S.ui = ui; chatLog = [{ me: false, key: "supportHi" }]; save(); closeSheet(); render(); toast(t("reset")); },
+  say: (x) => speak(x),
+  saySlow: (x) => speak(x, 0.6),
   pick: (i) => { if (LS.checked) return; LS.sel = +i; const o = cur().opts[LS.sel]; if (cur().speakOpts) speak(o.t); renderLesson(); },
   arr: (b) => { b = +b; if (LS.checked || LS.arr.includes(b)) return; LS.arr.push(b); speak(cur().bank[b]); renderLesson(); },
   unarr: (k) => { if (LS.checked) return; LS.arr.splice(+k, 1); renderLesson(); },
   ml: (i) => matchPick("l", +i),
   mr: (i) => matchPick("r", +i),
-  check: () => { const ex = cur(); if (ex.kind === "match") return; check(); },
+  check: () => { if (cur().kind !== "match") check(); },
   next: () => next(),
-  quit: () => { closeLesson(); toast("Ders yarıda bırakıldı — ilerleme kaydedilmedi"); },
-  closeDone: (up) => { closeLesson(); if (up === "1") setTimeout(() => toast(`🔥 Serin ${S.streak} gün oldu!`), 300); },
+  quit: () => { closeLesson(); toast(t("quit")); },
+  closeDone: (up) => { closeLesson(); if (up === "1") setTimeout(() => toast(t("streakUp", { n: S.streak })), 300); },
 };
 function matchPick(side, i) {
   const M = LS.match, ex = cur();
@@ -1204,23 +1448,32 @@ $("#app").addEventListener("click", (e) => {
   if (fn) fn(el.dataset.arg, el, e);
 });
 $("#app").addEventListener("submit", (e) => {
-  if (e.target.dataset.form !== "chat") return;
   e.preventDefault();
-  const inp = $("#chat-in"), t = inp.value.trim(); if (!t) return;
-  chatLog.push({ me: true, t }); refreshSheet();
+  if (e.target.dataset.form === "code") {
+    const v = $("#code-in").value.trim().toUpperCase();
+    // Demo: SIMBA-XXXX-XXXX biçimindeki her kod kabul edilir; gerçekte billing servisi doğrular
+    if (/^SIMBA-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(v)) { codeErr = false; S.premium = true; save(); closeSheet(); render(); toast(t("codeOk")); }
+    else { codeErr = true; refreshSheet(); }
+    return;
+  }
+  if (e.target.dataset.form !== "chat") return;
+  const inp = $("#chat-in"), msg = inp.value.trim(); if (!msg) return;
+  chatLog.push({ me: true, t: msg }); refreshSheet();
   setTimeout(() => {
-    chatLog.push({ me: false, t: `Talebin alındı (#${48000 + Math.floor(Math.random() * 999)}). Bir destek uzmanı birkaç dakika içinde buradan yanıt verecek.` });
+    chatLog.push({ me: false, key: "supportReply", id: 48000 + Math.floor(Math.random() * 999) });
     if (sheetFn === supportSheet) { refreshSheet(); const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight; }
   }, 900);
   const c = $("#chat"); if (c) c.scrollTop = c.scrollHeight;
   setTimeout(() => $("#chat-in") && $("#chat-in").focus(), 0);
 });
 $("#app").addEventListener("change", (e) => {
-  if (e.target.dataset.change === "uiLang" && e.target.value !== "Türkçe") toast("🌐 Diğer arayüz dilleri i18n paketiyle eklenecek");
+  if (e.target.dataset.change === "uiLang") setUi(e.target.value);
 });
+document.querySelectorAll("#ui-seg button").forEach((b) => (b.onclick = () => setUi(b.dataset.ui)));
 document.addEventListener("keydown", (e) => {
   if (!LS || !$("#lesson").classList.contains("show")) return;
   const ex = cur(); if (!ex) return;
+  if (e.target.tagName === "INPUT") return;
   if (e.key === "Enter") { e.preventDefault(); if (LS.checked) next(); else if (ex.kind !== "match" && (LS.sel !== null || LS.arr.length)) check(); }
   else if (!LS.checked && ex.opts && /^[1-4]$/.test(e.key)) A.pick(+e.key - 1);
 });
@@ -1235,6 +1488,7 @@ $("#m-web").onclick = () => setMode("web");
 try { const m = localStorage.getItem("simba-demo-mode"); if (m) setMode(m); } catch (e) {}
 setInterval(() => document.querySelectorAll("[data-timer]").forEach((el) => (el.textContent = "⏱ " + timeLeft())), 30000);
 if ("speechSynthesis" in window) speechSynthesis.getVoices();
+if (!targets().includes(S.lang)) S.lang = "en";
 render();
 </script>
 </body>

@@ -138,6 +138,36 @@ a{color:var(--blue)}
 :root[data-theme="dark"] .bar{--bar-text:#10162f}
 .months{display:grid;grid-template-columns:repeat(10,1fr);font-size:11px;font-weight:800;color:var(--faint);text-align:left}
 
+/* market */
+.market{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.market .card h3{margin:0 0 4px;font-size:16px;font-weight:900}
+.market .card p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.langs{display:grid;gap:8px}
+.lang{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.lang code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:800;font-size:13px;color:var(--blue);background:var(--blue-soft);border-radius:8px;padding:4px 0;text-align:center}
+.lang b{display:block;font-weight:900;font-size:14.5px}
+.lang small{color:var(--muted);font-weight:700;font-size:12.5px}
+.mx-wrap{overflow-x:auto}
+.mx{border-collapse:separate;border-spacing:4px;font-size:13px;width:100%}
+.mx th{font-size:12px;color:var(--muted);font-weight:800;text-align:center;padding:4px}
+.mx th:first-child{text-align:left}
+.mx td{text-align:center;border-radius:8px;padding:8px 4px;font-weight:800}
+.mx td.l1{background:var(--green-soft);color:var(--green)}
+.mx td.l2{background:var(--yellow-soft);color:var(--text)}
+.mx td.l3{background:var(--surface-2);color:var(--muted)}
+.mx td.na{background:transparent;color:var(--faint)}
+.mx-key{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;font-weight:800;color:var(--muted)}
+.mx-key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.pay{width:100%;border-collapse:collapse;font-size:13.5px}
+.pay td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}
+.pay td:first-child{font-weight:900;width:34%;padding-right:10px}
+.st{display:inline-block;font-size:11px;font-weight:900;padding:1px 7px;border-radius:8px;margin-top:3px}
+.st.ok{background:var(--green-soft);color:var(--green)}
+.st.chk{background:var(--orange-soft);color:var(--orange)}
+.rules{margin:0;padding-left:18px;font-size:14px}
+.rules li{margin:5px 0}
+.rules b{font-weight:900}
+
 footer{margin-top:56px;color:var(--faint);font-size:13px}
 
 @media (max-width:980px){
@@ -145,6 +175,7 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
   .diagram{grid-template-columns:1fr}
   .ext{position:static}
   .money{grid-template-columns:1fr}
+  .market{grid-template-columns:1fr}
 }
 @media (max-width:620px){
   .products{grid-template-columns:1fr}
@@ -183,7 +214,7 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
     </div>
     <a class="btn" href="../demo/index.html">Öğrenci arayüzü demosu ▶</a>
   </div>
-  <p class="lead">Dört uygulama, tek backend. Uçtan uca TypeScript: mobilde React Native (Expo), web’de Next.js, sunucuda NestJS modüler monolit. Video, ses ve ödeme gibi zor parçalar hazır servislerden alınıyor; ekip öğrenme deneyimine odaklanıyor.</p>
+  <p class="lead">Dört uygulama, tek backend. Uçtan uca TypeScript: mobilde React Native (Expo), web’de Next.js, sunucuda NestJS modüler monolit. Video, ses ve ödeme gibi zor parçalar hazır servislerden alınıyor; ekip öğrenme deneyimine odaklanıyor. İlk pazar Türkmenistan, ardından BDT ülkeleri; arayüz Türkmence, Rusça ve Türkçe.</p>
 
   <section class="products" aria-label="Uygulamalar">
     <div class="card prod">
@@ -191,14 +222,14 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
       <h3>Simba</h3>
       <div class="who">Öğrenci uygulaması</div>
       <ul><li>Ders yolu & egzersizler</li><li>Hatalarını tekrar (FSRS)</li><li>Lig, görev, seri, can</li><li>Öğretmenle canlı ders</li><li>Creator kursları, Premium</li></ul>
-      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span></div>
+      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span><span class="tag">tk · ru · tr</span></div>
     </div>
     <div class="card prod">
       <div class="ico" style="background:var(--green-soft)">👩‍🏫</div>
       <h3>Simba Teach</h3>
       <div class="who">Öğretmen uygulaması</div>
       <ul><li>Başvuru, profil, video tanıtım</li><li>Uygunluk takvimi</li><li>Rezervasyon & “Şimdi Görüş”</li><li>Görüntülü ders + ders notu</li><li>Kazanç & ödeme talebi</li></ul>
-      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span></div>
+      <div class="plat"><span class="tag">iOS</span><span class="tag">Android</span><span class="tag">Web</span><span class="tag">tk · ru · tr</span></div>
     </div>
     <div class="card prod">
       <div class="ico" style="background:var(--purple-soft)">🎬</div>
@@ -282,7 +313,8 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
       <div class="box"><b>Azure AI Speech</b><small>TTS, STT, telaffuz puanı (en/zh/ru/fr)</small></div>
       <div class="box"><b>LLM API</b><small>AI sohbet, hata açıklama, içerik asistanı</small></div>
       <div class="box"><b>RevenueCat</b><small>App Store / Google Play abonelik</small></div>
-      <div class="box"><b>iyzico · Stripe</b><small>web ödeme, Stripe Connect payout</small></div>
+      <div class="box"><b>iyzico · Stripe · yerel ortaklar</b><small>web ödeme, payout; Türkmenistan’da kod satan bayiler</small></div>
+      <div class="box"><b>SMS sağlayıcısı</b><small>telefonla giriş (OTP), bildirim yedeği</small></div>
       <div class="box"><b>Mux</b><small>creator video: yükleme, HLS</small></div>
       <div class="box"><b>FCM / APNs · Resend</b><small>push ve e-posta</small></div>
       <div class="box"><b>Sentry · Grafana</b><small>hata, metrik, trace</small></div>
@@ -324,6 +356,58 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
     </div>
   </div>
 
+  <h2>Hedef pazar: Türkmenistan ve BDT</h2>
+  <p class="sub">Pazarın dil, ödeme ve ağ koşulları mimariyi doğrudan etkiliyor. Turuncu işaretli maddeler lansmandan önce yerel ortakla doğrulanmalı.</p>
+  <div class="market">
+    <div class="card">
+      <h3>Arayüz dilleri</h3>
+      <p>Arayüz dili aynı zamanda öğrenmenin kaynak dili. Metinler koda gömülmez: ICU MessageFormat + Tolgee.</p>
+      <div class="langs">
+        <div class="lang"><code>tk</code><div><b>Türkmence · varsayılan</b><small>Latin: ä ç ž ň ö ş ü ý. Tarayıcı/mobil Intl verisi yok, gün-ay adları için kendi tablomuz</small></div></div>
+        <div class="lang"><code>ru</code><div><b>Rusça</b><small>BDT’nin ortak dili; 3 biçimli çoğul kuralları (1 урок, 2 урока, 5 уроков)</small></div></div>
+        <div class="lang"><code>tr</code><div><b>Türkçe</b><small>Türkiye pazarı ve ekibin dili</small></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Kurs matrisi</h3>
+      <p>Hedef dil içeriği bir kez üretilir; talimat, çeviri ve ipuçları <code>exercise_translations</code> içinde kaynak dil başına tutulur.</p>
+      <div class="mx-wrap">
+        <table class="mx">
+          <thead><tr><th>Kaynak → Hedef</th><th>EN</th><th>ZH</th><th>RU</th><th>FR</th></tr></thead>
+          <tbody>
+            <tr><th>Türkmence</th><td class="l1">Lansman</td><td class="l3">Sonra</td><td class="l2">Faz 4</td><td class="l3">Sonra</td></tr>
+            <tr><th>Rusça</th><td class="l1">Lansman</td><td class="l3">Sonra</td><td class="na">—</td><td class="l3">Sonra</td></tr>
+            <tr><th>Türkçe</th><td class="l2">Faz 4</td><td class="l3">Sonra</td><td class="l3">Sonra</td><td class="l3">Sonra</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mx-key"><span><i style="background:var(--green-soft)"></i>Faz 1 lansmanı</span><span><i style="background:var(--yellow-soft)"></i>İlk genişleme</span><span><i style="background:var(--surface-2)"></i>Talebe göre</span></div>
+    </div>
+    <div class="card">
+      <h3>Ödeme: ülkeye göre adaptör</h3>
+      <p><code>billing</code> içinde ülke → <code>PaymentProvider</code> eşlemesi ve ülke bazlı fiyat tablosu, Admin panelinden yönetilir.</p>
+      <table class="pay">
+        <tr><td>Türkmenistan</td><td><b>Aktivasyon kodu</b> (Premium, ders kredisi): yerel bayiler satar, kullanıcı uygulamada girer. Paralelde manat ile yerel ödeme ortağı.<br><span class="st chk">Yerel kartla uluslararası ödeme çok kısıtlı · doğrulanmalı</span></td></tr>
+        <tr><td>Kazakistan, Özbekistan</td><td>Kart + yerel cüzdanlar (ör. Kaspi; Payme, Click).<br><span class="st chk">Doğrulanmalı</span></td></tr>
+        <tr><td>Rusya</td><td>Yerel sağlayıcı (ör. YooKassa) yerel şirket ister; mağaza ödemeleri 2022’den beri kısıtlı.<br><span class="st chk">Hukuki değerlendirme · sonraki faz</span></td></tr>
+        <tr><td>Türkiye</td><td>iyzico + mağaza IAP.<br><span class="st ok">Hazır</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Ağ, erişim ve hukuk</h3>
+      <p>Türkmenistan’da internet yavaş ve pahalı; birçok yabancı servis engellenebiliyor.</p>
+      <ul class="rules">
+        <li><b>Tek alan adı:</b> API, CDN, analitik ve fontlar yalnızca kendi alan adlarımızdan.</li>
+        <li><b>Giriş:</b> telefon + SMS OTP birincil; +993 teslimatı test edilmeli.</li>
+        <li><b>Bildirim:</b> FCM/APNs engellenirse uygulama içi bildirim kutusu + SMS.</li>
+        <li><b>Dağıtım:</b> Google Play’e alternatif olarak PWA ve doğrudan APK.</li>
+        <li><b>Görüntülü ders:</b> LiveKit TURN/TLS 443 yedeği zorunlu; “sadece ses” modu.</li>
+        <li><b>Hafiflik:</b> offline ders paketleri, Opus ses, WebP/AVIF görseller.</li>
+        <li><b>Hukuk:</b> Türkmenistan veri mevzuatı doğrulanmalı; Rusya için veri Rusya’da tutulmalı (242-FZ).</li>
+      </ul>
+    </div>
+  </div>
+
   <h2>Teknoloji seçimleri</h2>
   <p class="sub">Her katman için tek öneri ve gerekçesi.</p>
   <table class="stack">
@@ -335,7 +419,8 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
       <tr><td>Veri</td><td><span class="chip">PostgreSQL</span><span class="chip">Redis</span><span class="chip">S3</span><span class="chip">Meilisearch</span></td><td>İlişkisel çekirdek + jsonb egzersiz verisi; sorted set ile canlı lig sıralaması.</td></tr>
       <tr><td>Canlı ders</td><td><span class="chip">LiveKit</span></td><td>Açık kaynak WebRTC SFU, RN/web SDK’ları, kayıt; Cloud’dan self-host’a geçilebilir.</td></tr>
       <tr><td>Ses & AI</td><td><span class="chip">Azure AI Speech</span><span class="chip">LLM API</span></td><td>Dört dilde TTS + telaffuz puanı; AI sohbet partneri ve içerik asistanı.</td></tr>
-      <tr><td>Ödeme</td><td><span class="chip">RevenueCat</span><span class="chip">iyzico</span><span class="chip">Stripe</span></td><td>Mağaza abonelikleri tek API; TR kartları için iyzico; global + payout için Stripe Connect.</td></tr>
+      <tr><td>Ödeme</td><td><span class="chip">RevenueCat</span><span class="chip">iyzico</span><span class="chip">Stripe</span><span class="chip">Aktivasyon kodu</span></td><td>Ülkeye göre takılabilen sağlayıcılar; mağazalar tek API’de; Türkmenistan’da yerel bayilerin sattığı kodlar.</td></tr>
+      <tr><td>Yerelleştirme</td><td><span class="chip">FormatJS (ICU)</span><span class="chip">Tolgee</span></td><td>Türkmence, Rusça, Türkçe; Rusça çoğul kuralları; çevirmenler için bağlamlı arayüz.</td></tr>
       <tr><td>Altyapı</td><td><span class="chip">AWS</span><span class="chip">Vercel</span><span class="chip">Terraform</span><span class="chip">GitHub Actions</span></td><td>Frankfurt bölgesi; K8s yerine Fargate ile düşük operasyon yükü.</td></tr>
       <tr><td>Gözlem</td><td><span class="chip">Sentry</span><span class="chip">OpenTelemetry</span><span class="chip">PostHog</span></td><td>Hata takibi, uçtan uca trace, ürün analitiği ve feature flag.</td></tr>
     </tbody>
@@ -371,14 +456,14 @@ footer{margin-top:56px;color:var(--faint);font-size:13px}
     <div class="months"><span>Ay 1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
     <div class="name">Faz 0 · Temel<small>2–3 hafta</small></div>
     <div class="track"><div class="bar" style="left:0;width:8%;background:var(--faint)">Temel</div></div>
-    <div class="name">Faz 1 · MVP<small>Öğrenci + Admin v1</small></div>
-    <div class="track"><div class="bar" style="left:7%;width:33%;background:var(--blue)">Öğrenci mobil/web · İngilizce A1 · Premium</div></div>
+    <div class="name">Faz 1 · MVP<small>Türkmenistan lansmanı</small></div>
+    <div class="track"><div class="bar" style="left:7%;width:33%;background:var(--blue)">tk/ru/tr arayüz · tk→en, ru→en A1 · aktivasyon kodu</div></div>
     <div class="name">Faz 2 · Öğretmen<small>Simba Teach</small></div>
     <div class="track"><div class="bar" style="left:38%;width:22%;background:var(--green)">Takvim · LiveKit · payout</div></div>
     <div class="name">Faz 3 · Creator<small>Simba Studio açılır</small></div>
     <div class="track"><div class="bar" style="left:58%;width:22%;background:var(--purple)">Pazar yeri · gelir paylaşımı</div></div>
-    <div class="name">İçerik<small>ZH · RU · FR</small></div>
-    <div class="track"><div class="bar" style="left:12%;width:88%;background:var(--orange)">Çince, Rusça, Fransızca içerik üretimi (paralel)</div></div>
+    <div class="name">İçerik & pazar<small>tk→ru, ZH, FR · BDT</small></div>
+    <div class="track"><div class="bar" style="left:12%;width:88%;background:var(--orange)">tk→ru, Çince, Fransızca içerik (paralel) · Özbekistan/Kazakistan ödeme ve dilleri</div></div>
     <div class="name">AI<small>sohbet, telaffuz</small></div>
     <div class="track"><div class="bar" style="left:70%;width:30%;background:var(--pink)">AI sohbet partneri · telaffuz puanı</div></div>
   </div>
